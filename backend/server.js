@@ -43,9 +43,11 @@ app.use(passport.session());
 // Routes configuration
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
+const postRoutes = require("./routes/postRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/post", postRoutes);
 
 // Application startup
 const start = async () => {

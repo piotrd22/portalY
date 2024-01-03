@@ -28,7 +28,7 @@ const createUser = async (req, res) => {
 
     const savedUser = await userService.createUser(username, password);
 
-    res.status(status.CREATED).json(userMapper(savedUser));
+    return res.status(status.CREATED).json({ user: userMapper(savedUser) });
   } catch (err) {
     console.error(err.message);
     res
@@ -43,7 +43,7 @@ const deleteUser = async (req, res) => {
 
     await userService.deleteUser(id);
 
-    res.status(status.OK).json({ message: "Sucessfully deleted" });
+    return res.status(status.OK).json({ message: "Sucessfully deleted" });
   } catch (err) {
     console.error(err.message);
     return res
@@ -320,11 +320,14 @@ const updateUsername = async (req, res) => {
     const { username } = req.body;
     const { id } = req.params;
 
-    await userService.updateUser(id, { username: username });
+    const updatedUser = await userService.updateUser(id, {
+      username: username,
+    });
 
-    return res
-      .status(status.OK)
-      .json({ message: "Username updated successfully", username });
+    return res.status(status.OK).json({
+      message: "Username updated successfully",
+      user: userMapper(updatedUser),
+    });
   } catch (err) {
     console.error(err.message);
     return res

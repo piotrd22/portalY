@@ -1,4 +1,5 @@
 const status = require("http-status");
+const mongoose = require("mongoose");
 
 const createValidator = (validatorFunctions) => {
   return async (req, res, next) => {
@@ -30,4 +31,13 @@ const validateNotEmpty = (value, valueName) => {
   return null;
 };
 
-module.exports = { createValidator, validateNotEmpty };
+const validateMongoId = (id, idName) => {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return idName
+      ? `${idName} is not valid mongo id`
+      : "Id is not valid mongo id";
+  }
+  return null;
+};
+
+module.exports = { createValidator, validateNotEmpty, validateMongoId };

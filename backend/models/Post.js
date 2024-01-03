@@ -9,12 +9,13 @@ const postSchema = new Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
     },
-    parentTweet: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Post",
-    },
+    parents: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Post",
+      },
+    ],
     replies: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -27,9 +28,12 @@ const postSchema = new Schema(
         ref: "Post",
       },
     ],
-    quotedTweet: {
+    quotedPost: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Post",
+    },
+    isDeleted: {
+      type: Boolean,
     },
   },
   { timestamps: true }

@@ -62,50 +62,20 @@ const userSchema = new Schema(
         ref: "User",
       },
     ],
-    // posts: [
-    //   {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: "Post"
-    //   }
-    // ],
-    // replies: [
-    //   {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: "Post",
-    //   },
-    // ],
+    posts: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Post",
+      },
+    ],
+    replies: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Post",
+      },
+    ],
   },
   { timestamps: true }
 );
-
-// userSchema.pre("remove", async function (next) {
-//   const user = this;
-
-//   try {
-//     await mongoose
-//       .model("User")
-//       .updateMany({ followers: user._id }, { $pull: { followers: user._id } });
-
-//     await mongoose
-//       .model("User")
-//       .updateMany({ following: user._id }, { $pull: { following: user._id } });
-
-//     await mongoose
-//       .model("User")
-//       .updateMany(
-//         { blockedUsers: user._id },
-//         { $pull: { blockedUsers: user._id } }
-//       );
-
-//     await mongoose
-//       .model("User")
-//       .updateMany({ blockedBy: user._id }, { $pull: { blockedBy: user._id } });
-
-//     next();
-//   } catch (err) {
-//     console.error(err.message);
-//     next(err);
-//   }
-// });
 
 module.exports = model("User", userSchema);
