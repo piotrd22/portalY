@@ -362,6 +362,54 @@ const updateUser = async (req, res) => {
   }
 };
 
+const getUserPosts = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { page = 1, pageSize = 10 } = req.query;
+
+    const userWithPosts = await userService.getUserPosts(id, page, pageSize);
+
+    if (!userWithPosts) {
+      return res.status(status.NOT_FOUND).json({ message: "User not found" });
+    }
+
+    const posts = userWithPosts.posts;
+
+    return res.status(status.OK).json({ posts });
+  } catch (err) {
+    console.error(err.message);
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ message: "Internal Server Error" });
+  }
+};
+
+const getUserReplies = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { page = 1, pageSize = 10 } = req.query;
+
+    const userWithReplies = await userService.getUserReplies(
+      id,
+      page,
+      pageSize
+    );
+
+    if (!userWithReplies) {
+      return res.status(status.NOT_FOUND).json({ message: "User not found" });
+    }
+
+    const replies = userWithReplies.replies;
+
+    return res.status(status.OK).json({ replies });
+  } catch (err) {
+    console.error(err.message);
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ message: "Internal Server Error" });
+  }
+};
+
 const updateAvatar = async (req, res) => {
   // TODO
 };
@@ -381,4 +429,6 @@ module.exports = {
   updatePassword,
   updateUsername,
   updateUser,
+  getUserPosts,
+  getUserReplies
 };

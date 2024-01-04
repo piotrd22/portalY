@@ -1,4 +1,5 @@
 const status = require("http-status");
+const mongoose = require("mongoose");
 
 const requireAuth = (req, res, next) => {
   if (!req.isAuthenticated() || !req.user) {

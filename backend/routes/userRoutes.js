@@ -124,4 +124,24 @@ router.patch(
   userController.updateUsername
 );
 
+router.get(
+  "/:id/posts",
+  [
+    authMiddleware.requireAuth,
+    commonMiddleware.validatePathIdIsValidMongoId,
+    authMiddleware.requireNonBlocked,
+  ],
+  userController.getUserPosts
+);
+
+router.get(
+  "/:id/replies",
+  [
+    authMiddleware.requireAuth,
+    commonMiddleware.validatePathIdIsValidMongoId,
+    authMiddleware.requireNonBlocked,
+  ],
+  userController.getUserReplies
+);
+
 module.exports = router;

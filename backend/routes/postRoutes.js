@@ -5,6 +5,8 @@ const authMiddleware = require("../middleware/authMiddleware");
 const commonMiddleware = require("../middleware/commonMiddleware");
 const postValidators = require("../validators/post/postValidators");
 
+router.get("/feed", authMiddleware.requireAuth, postController.getFeed);
+
 router.get(
   "/:id",
   [authMiddleware.requireAuth, commonMiddleware.validatePathIdIsValidMongoId],

@@ -23,7 +23,7 @@ const getPostById = async (id) => {
   return await Post.findById(id);
 };
 
-const getPostReplies = async (id, page = 1, pageSize = 10) => {
+const getPostReplies = async (id, currentUser, page = 1, pageSize = 10) => {
   const skip = (parseInt(page) - 1) * parseInt(pageSize);
 
   return await Post.findById(id).populate({
@@ -79,7 +79,33 @@ const deletePost = async (post, user) => {
 };
 
 const updatePost = async (post, dataToUpdate) => {
-  return await post.updateOne(dataToUpdate);
+  return await Post.findByIdAndUpdate(post._id, dataToUpdate, {
+    new: true,
+  });
+};
+
+const getFeed = async (currentUser, page = 1, pageSize = 10) => {
+  const skip = (parseInt(page) - 1) * parseInt(pageSize);
+
+  return await Post.find({
+    user: { $in: currentUser.following },
+    isDeleted: { $ne: true },
+    "user._id": { $nin: currentUser.blockedUsers },
+    "user._id": { $nin: currentUser.blockedBy },
+    parents: { $size: 0 },
+  })
+    .populate({
+      path: "user",
+      select: "avatar username _id",
+    })
+    .populate({
+      path: "quotedPost",
+      select: "content user _id createdAt updatedAt isDeleted",
+      populate: { path: "user", select: "avatar username _id" },
+    })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(parseInt(pageSize));
 };
 
 module.exports = {
@@ -91,4 +117,5 @@ module.exports = {
   createQuote,
   deletePost,
   updatePost,
+  getFeed,
 };

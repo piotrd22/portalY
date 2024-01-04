@@ -1,6 +1,7 @@
 const status = require("http-status");
 const postService = require("../services/postService");
 const userService = require("../services/userService");
+const mongoose = require("mongoose");
 
 const getPostById = async (req, res) => {
   try {
@@ -34,6 +35,17 @@ const getPostById = async (req, res) => {
     // Check if the quotedPost is not deleted
     if (post.quotedPost && post.quotedPost.isDeleted) {
       post.quotedPost.content = "Post has been deleted";
+    } else if (
+      // Check if the user of the quotedPost is blocked
+      post.quotedPost &&
+      (req.user.blockedUsers.some((user) =>
+        user._id.equals(new mongoose.Types.ObjectId(post.quotedPost.user.id))
+      ) ||
+        req.user.blockedBy.some((user) =>
+          user._id.equals(new mongoose.Types.ObjectId(post.quotedPost.user.id))
+        ))
+    ) {
+      post.quotedPost.content = "Post content has been hidden";
     }
 
     // Check the parents of the post
@@ -72,7 +84,7 @@ const getPostReplies = async (req, res) => {
     const { id } = req.params;
     const { page = 1, pageSize = 10 } = req.query;
 
-    const post = await postService.getPostReplies(id, page, pageSize);
+    const post = await postService.getPostReplies(id, req.user, page, pageSize);
 
     if (!post) {
       return res.status(status.NOT_FOUND).json({ message: "Post not found" });
@@ -171,7 +183,7 @@ const deletePost = async (req, res) => {
 
     const post = await postService.getPostById(id);
 
-    if (!post) {
+    if (!post || post.isDeleted) {
       return res.status(status.NOT_FOUND).json({ message: "Post not found" });
     }
 
@@ -203,11 +215,11 @@ const updatePost = async (req, res) => {
 
     const post = await postService.getPostById(id);
 
-    if (!post) {
+    if (!post || post.isDeleted) {
       return res.status(status.NOT_FOUND).json({ message: "Post not found" });
     }
 
-    if (req.user.id !== post.user.id) {
+    if (!req.user._id.equals(new mongoose.Types.ObjectId(post.user))) {
       return res.status(status.FORBIDDEN).json({ message: "Forbidden" });
     }
 
@@ -229,6 +241,39 @@ const updatePost = async (req, res) => {
   }
 };
 
+const getFeed = async (req, res) => {
+  try {
+    const { page = 1, pageSize = 10 } = req.query;
+
+    const posts = await postService.getFeed(req.user, page, pageSize);
+
+    posts.forEach((post) => {
+      if (post.quotedPost && post.quotedPost.isDeleted) {
+        post.quotedPost.content = "Post has been deleted";
+      } else if (
+        post.quotedPost &&
+        (req.user.blockedUsers.some((user) =>
+          user._id.equals(new mongoose.Types.ObjectId(post.quotedPost.user.id))
+        ) ||
+          req.user.blockedBy.some((user) =>
+            user._id.equals(
+              new mongoose.Types.ObjectId(post.quotedPost.user.id)
+            )
+          ))
+      ) {
+        post.quotedPost.content = "Post content has been hidden";
+      }
+    });
+
+    return res.status(status.OK).json({ posts });
+  } catch (err) {
+    console.error(err.message);
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ message: "Internal Server Error" });
+  }
+};
+
 module.exports = {
   getPostById,
   getPostReplies,
@@ -237,4 +282,5 @@ module.exports = {
   createQuote,
   deletePost,
   updatePost,
+  getFeed,
 };

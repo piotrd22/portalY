@@ -85,6 +85,51 @@ const updateUser = async (id, dataToUpdate) => {
   });
 };
 
+const getUserPosts = async (id, page = 1, pageSize = 10) => {
+  const skip = (parseInt(page) - 1) * parseInt(pageSize);
+
+  return await User.findById(id).populate({
+    path: "posts",
+    options: {
+      sort: { createdAt: -1 },
+      skip,
+      limit: parseInt(pageSize),
+    },
+    populate: {
+      path: "user",
+      select: "_id avatar username",
+    },
+    populate: {
+      path: "quotedPost",
+      select: "content user _id createdAt updatedAt isDeleted",
+      populate: { path: "user", select: "avatar username _id" },
+    },
+  });
+};
+
+const getUserReplies = async (id, page = 1, pageSize = 10) => {
+  const skip = (parseInt(page) - 1) * parseInt(pageSize);
+
+  return await User.findById(id).populate({
+    path: "replies",
+    options: {
+      sort: { createdAt: -1 },
+      skip,
+      limit: parseInt(pageSize),
+    },
+    populate: {
+      path: "user",
+      select: "_id avatar username",
+    },
+    populate: {
+      path: "parents",
+      select: "content user _id createdAt updatedAt isDeleted",
+      populate: { path: "user", select: "avatar username _id" },
+      options: { sort: { createdAt: -1 } },
+    },
+  });
+};
+
 module.exports = {
   getUserById,
   createUser,
@@ -96,4 +141,6 @@ module.exports = {
   searchUsers,
   getUserAndPopulate,
   updateUser,
+  getUserPosts,
+  getUserReplies,
 };
