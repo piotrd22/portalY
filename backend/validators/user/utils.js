@@ -46,9 +46,17 @@ const validateUrl = (url) => {
   }
 };
 
+const validateFile = (file) => {
+  if (!file || !file.buffer) {
+    return "Missing file or file buffer in the request";
+  }
+  return null;
+};
+
 module.exports = {
   validateDate,
   validateUsername,
   validatePassword,
   validateUrl,
+  validateFile,
 };

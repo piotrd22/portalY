@@ -2,8 +2,10 @@ const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middleware/authMiddleware");
 const commonMiddleware = require("../middleware/commonMiddleware");
+const userMiddleware = require("../middleware/userMiddleware");
 const userValidators = require("../validators/user/userValidators");
 const userController = require("../controllers/userController");
+const upload = require("../config/multer");
 
 router.get("/search", authMiddleware.requireAuth, userController.searchUsers);
 
@@ -12,7 +14,7 @@ router.get(
   [
     authMiddleware.requireAuth,
     commonMiddleware.validatePathIdIsValidMongoId,
-    authMiddleware.requireNonBlocked,
+    userMiddleware.requireNonBlocked,
   ],
   userController.getUserById
 );
@@ -24,7 +26,7 @@ router.delete(
   [
     authMiddleware.requireAuth,
     commonMiddleware.validatePathIdIsValidMongoId,
-    authMiddleware.requireMe,
+    userMiddleware.requireMe,
   ],
   userController.deleteUser
 );
@@ -34,7 +36,7 @@ router.patch(
   [
     authMiddleware.requireAuth,
     commonMiddleware.validatePathIdIsValidMongoId,
-    authMiddleware.requireMe,
+    userMiddleware.requireMe,
     userValidators.updateUserValidator,
   ],
   userController.updateUser
@@ -45,7 +47,7 @@ router.patch(
   [
     authMiddleware.requireAuth,
     commonMiddleware.validatePathIdIsValidMongoId,
-    authMiddleware.requireNonBlocked,
+    userMiddleware.requireNonBlocked,
   ],
   userController.followUser
 );
@@ -55,7 +57,7 @@ router.patch(
   [
     authMiddleware.requireAuth,
     commonMiddleware.validatePathIdIsValidMongoId,
-    authMiddleware.requireNonBlocked,
+    userMiddleware.requireNonBlocked,
   ],
   userController.unfollowUser
 );
@@ -77,7 +79,7 @@ router.get(
   [
     authMiddleware.requireAuth,
     commonMiddleware.validatePathIdIsValidMongoId,
-    authMiddleware.requireNonBlocked,
+    userMiddleware.requireNonBlocked,
   ],
   userController.getUserFollowers
 );
@@ -87,7 +89,7 @@ router.get(
   [
     authMiddleware.requireAuth,
     commonMiddleware.validatePathIdIsValidMongoId,
-    authMiddleware.requireNonBlocked,
+    userMiddleware.requireNonBlocked,
   ],
   userController.getUserFollowings
 );
@@ -97,7 +99,7 @@ router.get(
   [
     authMiddleware.requireAuth,
     commonMiddleware.validatePathIdIsValidMongoId,
-    authMiddleware.requireMe,
+    userMiddleware.requireMe,
   ],
   userController.getBlockedUsers
 );
@@ -107,7 +109,7 @@ router.patch(
   [
     authMiddleware.requireAuth,
     commonMiddleware.validatePathIdIsValidMongoId,
-    authMiddleware.requireMe,
+    userMiddleware.requireMe,
     userValidators.updatePasswordValidator,
   ],
   userController.updatePassword
@@ -118,7 +120,7 @@ router.patch(
   [
     authMiddleware.requireAuth,
     commonMiddleware.validatePathIdIsValidMongoId,
-    authMiddleware.requireMe,
+    userMiddleware.requireMe,
     userValidators.updateUsernameValidator,
   ],
   userController.updateUsername
@@ -129,7 +131,7 @@ router.get(
   [
     authMiddleware.requireAuth,
     commonMiddleware.validatePathIdIsValidMongoId,
-    authMiddleware.requireNonBlocked,
+    userMiddleware.requireNonBlocked,
   ],
   userController.getUserPosts
 );
@@ -139,9 +141,31 @@ router.get(
   [
     authMiddleware.requireAuth,
     commonMiddleware.validatePathIdIsValidMongoId,
-    authMiddleware.requireNonBlocked,
+    userMiddleware.requireNonBlocked,
   ],
   userController.getUserReplies
+);
+
+// I am using post because of upload.single("file")
+router.post(
+  "/:id/avatar",
+  [
+    authMiddleware.requireAuth,
+    commonMiddleware.validatePathIdIsValidMongoId,
+    userValidators.updateAvatarValidator,
+    upload.single("file"),
+  ],
+  userController.updateAvatar
+);
+
+router.delete(
+  "/:id/avatar",
+  [
+    authMiddleware.requireAuth,
+    commonMiddleware.validatePathIdIsValidMongoId,
+    userMiddleware.requireMeOrAdmin,
+  ],
+  userController.deleteAvatar
 );
 
 module.exports = router;

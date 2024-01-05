@@ -27,9 +27,14 @@ const createUserValidator = commonValidators.createValidator([
   async (req) => utils.validateUsername(req.body.username),
 ]);
 
+const updateAvatarValidator = commonValidators.createValidator([
+  async (req) => utils.validateFile(req.file),
+]);
+
 module.exports = {
   updateUsernameValidator,
   updatePasswordValidator,
   updateUserValidator,
   createUserValidator,
+  updateAvatarValidator,
 };

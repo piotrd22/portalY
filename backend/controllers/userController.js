@@ -2,6 +2,7 @@ const status = require("http-status");
 const bcrypt = require("bcrypt");
 const userMapper = require("../mappers/userMapper");
 const userService = require("../services/userService");
+const imagekit = require("../config/imagekit");
 
 const getUserById = async (req, res) => {
   try {
@@ -411,7 +412,80 @@ const getUserReplies = async (req, res) => {
 };
 
 const updateAvatar = async (req, res) => {
-  // TODO
+  try {
+    const { id } = req.params;
+
+    const existingUser = await userService.getUserById(id);
+
+    if (!existingUser) {
+      return res.status(status.NOT_FOUND).json({ message: "User not found" });
+    }
+
+    const uploadResponse = await new Promise(async (resolve, reject) => {
+      try {
+        const response = await imagekit.upload({
+          file: req.file.buffer,
+          fileName: req.file.originalname,
+          folder: "user_avatars",
+        });
+        resolve(response);
+      } catch (error) {
+        reject(error);
+      }
+    });
+
+    const { url, fileId } = uploadResponse;
+
+    if (existingUser.avatar && existingUser.avatarId) {
+      imagekit.deleteFile(existingUser.avatarId);
+    }
+
+    const updatedUser = await userService.updateUser(id, {
+      avatar: url,
+      avatarId: fileId,
+    });
+
+    return res.status(status.OK).json({
+      message: "Avatar updated successfully",
+      user: userMapper(updatedUser),
+    });
+  } catch (err) {
+    console.error(err.message);
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ message: "Internal Server Error" });
+  }
+};
+
+const deleteAvatar = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const existingUser = await userService.getUserById(id);
+
+    if (!existingUser) {
+      return res.status(status.NOT_FOUND).json({ message: "User not found" });
+    }
+
+    if (existingUser.avatar && existingUser.avatarId) {
+      imagekit.deleteFile(existingUser.avatarId);
+    }
+
+    const updatedUser = await userService.updateUser(id, {
+      avatar: "",
+      avatarId: "",
+    });
+
+    return res.status(status.OK).json({
+      message: "Avatar deleted successfully",
+      user: userMapper(updatedUser),
+    });
+  } catch (err) {
+    console.error(err.message);
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ message: "Internal Server Error" });
+  }
 };
 
 module.exports = {
@@ -430,5 +504,7 @@ module.exports = {
   updateUsername,
   updateUser,
   getUserPosts,
-  getUserReplies
+  getUserReplies,
+  updateAvatar,
+  deleteAvatar,
 };

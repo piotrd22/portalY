@@ -20,6 +20,10 @@ const userSchema = new Schema(
       type: String,
       default: "",
     },
+    avatarId: {
+      type: String,
+      default: "",
+    },
     bio: {
       type: String,
       max: 200,
