@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
+const Post = require("../models/Post");
 
 const getUserById = async (id) => {
   return await User.findById(id);
@@ -20,6 +21,7 @@ const deleteUser = async (id) => {
   await User.updateMany({ following: id }, { $pull: { following: id } });
   await User.updateMany({ blockedBy: id }, { $pull: { blockedBy: id } });
   await User.updateMany({ blockedUsers: id }, { $pull: { blockedUsers: id } });
+  await Post.updateMany({ user: id }, { isDeleted: true });
 };
 
 const followUser = async (user, userToFollow) => {
