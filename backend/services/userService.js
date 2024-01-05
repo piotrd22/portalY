@@ -17,11 +17,28 @@ const createUser = async (username, password) => {
 
 const deleteUser = async (id) => {
   await User.findByIdAndDelete(id);
-  await User.updateMany({ followers: id }, { $pull: { followers: id } });
-  await User.updateMany({ following: id }, { $pull: { following: id } });
-  await User.updateMany({ blockedBy: id }, { $pull: { blockedBy: id } });
-  await User.updateMany({ blockedUsers: id }, { $pull: { blockedUsers: id } });
-  await Post.updateMany({ user: id }, { isDeleted: true });
+  await User.updateMany(
+    {
+      $or: [
+        { followers: id },
+        { following: id },
+        { blockedBy: id },
+        { blockedUsers: id },
+      ],
+    },
+    {
+      $pull: {
+        followers: id,
+        following: id,
+        blockedBy: id,
+        blockedUsers: id,
+      },
+    }
+  );
+  await Post.updateMany(
+    { user: id },
+    { $set: { isDeleted: true, user: null } }
+  );
 };
 
 const followUser = async (user, userToFollow) => {
