@@ -11,6 +11,13 @@ const login = (req, res) => {
   res.status(status.OK).json(userMapper(req.user));
 };
 
+const isAuthenticated = (req, res) => {
+  if (req.isAuthenticated() && req.user) {
+    return res.status(200).json({ isLoggedIn: true, userId: req.user._id });
+  }
+  return res.status(200).json({ isLoggedIn: false });
+};
+
 const logout = (req, res) => {
   req.logout((err) => {
     if (err) {
@@ -23,4 +30,4 @@ const logout = (req, res) => {
   });
 };
 
-module.exports = { login, logout };
+module.exports = { login, logout, isAuthenticated };

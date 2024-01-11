@@ -35,6 +35,17 @@ const deleteUser = async (id) => {
       },
     }
   );
+
+  const userPosts = await Post.find({ user: id });
+
+  // I know it sucks but I don't have much time so maybe I'll change it in future
+  for (const post of userPosts) {
+    await Post.updateMany(
+      { $or: [{ replies: post._id }, { quotedBy: post._id }] },
+      { $pull: { replies: post._id, quotedBy: post._id } }
+    );
+  }
+
   await Post.updateMany(
     { user: id },
     { $set: { isDeleted: true, user: null } }
