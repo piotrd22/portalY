@@ -7,4 +7,7 @@ export default {
   logout() {
     return apiClient.get("/auth/logout", { withCredentials: true });
   },
+  isAuthenticated() {
+    return apiClient.get("/auth", { withCredentials: true });
+  },
 };

@@ -40,9 +40,23 @@ export default {
           })
         );
 
+        localStorage.removeItem("userId");
+
         this.$router.push({ name: "Home" });
       } catch (err) {
         console.error("Logout error:", err);
+
+        localStorage.setItem("isLoggedIn", JSON.stringify(false));
+        window.dispatchEvent(
+          new CustomEvent("isLoggedIn-localstorage-changed", {
+            detail: {
+              storage: false,
+            },
+          })
+        );
+
+        localStorage.removeItem("userId");
+
         const errorMessage = err.response?.data.message || "Logout failed.";
         this.$toast.error(errorMessage);
       }
