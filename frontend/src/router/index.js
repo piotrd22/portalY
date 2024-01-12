@@ -35,6 +35,8 @@ router.beforeEach((to, _, next) => {
     } else {
       next({ name: "Home" });
     }
+  } else if (to.name === "Home" && isAuthenticated()) {
+    next({ name: "Feed" });
   } else {
     next();
   }

@@ -33,6 +33,15 @@
             >
               <v-icon>mdi-email</v-icon>
             </v-btn>
+            <v-btn
+              v-if="showButton"
+              @click="scrollToTop"
+              icon
+              class="social-btn"
+              color="primary"
+            >
+              <v-icon>mdi-arrow-up</v-icon>
+            </v-btn>
           </v-row>
         </v-col>
       </v-row>
@@ -42,6 +51,11 @@
 
 <script>
 export default {
+  data() {
+    return {
+      showButton: false,
+    };
+  },
   methods: {
     openLink(url) {
       window.open(url, "_blank");
@@ -49,6 +63,17 @@ export default {
     openMail(mailto) {
       window.location.href = mailto;
     },
+    handleScroll() {
+      const scrollPosition =
+        window.scrollY || document.documentElement.scrollTop;
+      this.showButton = scrollPosition > 20;
+    },
+    scrollToTop() {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+  },
+  mounted() {
+    window.addEventListener("scroll", this.handleScroll);
   },
 };
 </script>

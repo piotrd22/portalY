@@ -76,7 +76,9 @@
         <div>
           <v-icon class="v-icon">mdi-calendar-clock</v-icon>
           <span>{{ formatDate(post.createdAt) }}</span>
-          <v-icon class="v-icon">mdi-comment-multiple</v-icon>
+          <v-icon class="v-icon reply-icon" @click.prevent="openReplyPostDialog"
+            >mdi-comment-multiple</v-icon
+          >
           <span>{{ post.replies.length }}</span>
           <v-icon class="v-icon quote-icon" @click.prevent="openQuotePostDialog"
             >mdi-format-quote-close</v-icon
@@ -99,15 +101,13 @@
     <v-card>
       <v-card-title>Update Post</v-card-title>
       <v-card-text>
-        <v-form @submit.prevent="updatePost">
-          <v-text-field v-model="updatePostContent"></v-text-field>
-          <v-btn type="submit" color="primary" @click="updatePost"
-            >Update Post</v-btn
-          >
-        </v-form>
+        <v-text-field v-model="updatePostContent"></v-text-field>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
+        <v-btn type="submit" color="primary" @click="updatePost"
+          >Update Post</v-btn
+        >
         <v-btn
           color="blue-darken-1"
           variant="text"
@@ -177,6 +177,25 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
+
+  <v-dialog v-model="replyPostDialog" persistent max-width="500">
+    <v-card>
+      <v-card-title>Reply</v-card-title>
+      <v-card-text>
+        <v-text-field v-model="replyPostContent"></v-text-field>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn type="submit" color="primary" @click="createReply">Reply</v-btn>
+        <v-btn
+          color="blue-darken-1"
+          variant="text"
+          @click="closeReplyPostDialog"
+          >Close</v-btn
+        >
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script>
@@ -190,6 +209,8 @@ export default {
       deletePostDialog: false,
       quotePostDialog: false,
       quotePostContent: "",
+      replyPostDialog: false,
+      replyPostContent: "",
     };
   },
   props: {
@@ -281,6 +302,27 @@ export default {
         this.$toast.error(errorMessage);
       }
     },
+    openReplyPostDialog() {
+      this.replyPostDialog = true;
+    },
+    closeReplyPostDialog() {
+      this.replyPostDialog = false;
+    },
+    async createReply() {
+      try {
+        const response = await postService.createReply(
+          this.replyPostContent,
+          this.post._id
+        );
+        this.closeReplyPostDialog();
+        this.$toast.success("Reply successfully added!");
+        this.post.replies.push(response.data.post);
+      } catch (err) {
+        console.error("createReply() Post.vue error:", err);
+        const errorMessage = err?.response?.data.message || "Replying failed.";
+        this.$toast.error(errorMessage);
+      }
+    },
   },
 };
 </script>
@@ -349,7 +391,7 @@ export default {
 .post-details {
   display: flex;
   align-items: center;
-  justify-content: space-between; /* Dodaj tę linię, aby przesunąć na koniec */
+  justify-content: space-between;
   font-size: 12px;
   color: #424242;
   margin-top: 10px;
@@ -373,5 +415,9 @@ export default {
 
 .quote-icon:hover {
   color: #9c27b0;
+}
+
+.reply-icon:hover {
+  color: #009688;
 }
 </style>

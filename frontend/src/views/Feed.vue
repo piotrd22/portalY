@@ -67,6 +67,6 @@ export default {
 
 <style scoped>
 .custom-container {
-  max-width: 70%;
+  max-width: 60%;
 }
 </style>

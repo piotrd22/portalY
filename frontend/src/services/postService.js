@@ -23,4 +23,11 @@ export default {
     };
     return apiClient.post("/post/quote", body, { withCredentials: true });
   },
+  createReply(content, parentId) {
+    const body = {
+      content,
+      parentId,
+    };
+    return apiClient.post("/post/reply", body, { withCredentials: true });
+  },
 };
