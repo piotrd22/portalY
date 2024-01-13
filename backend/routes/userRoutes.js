@@ -152,8 +152,8 @@ router.post(
   [
     authMiddleware.requireAuth,
     commonMiddleware.validatePathIdIsValidMongoId,
-    userValidators.updateAvatarValidator,
     upload.single("file"),
+    userValidators.updateAvatarValidator,
   ],
   userController.updateAvatar
 );

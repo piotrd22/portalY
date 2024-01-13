@@ -45,4 +45,10 @@ router.get(
   postController.getPostReplies
 );
 
+router.get(
+  "/:id/quoted",
+  [authMiddleware.requireAuth, commonMiddleware.validatePathIdIsValidMongoId],
+  postController.getPostQuotedBy
+);
+
 module.exports = router;

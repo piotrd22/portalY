@@ -13,9 +13,17 @@ const getPostByIdAndPopulate = async (id) => {
     })
     .populate({
       path: "parents",
-      select: "content user _id createdAt updatedAt isDeleted",
-      populate: { path: "user", select: "avatar username _id" },
-      options: { sort: { createdAt: -1 } },
+      select:
+        "content user _id createdAt updatedAt isDeleted replies quotedPost quotedBy",
+      populate: [
+        { path: "user", select: "avatar username _id" },
+        {
+          path: "quotedPost",
+          select: "content user _id createdAt updatedAt isDeleted",
+          populate: { path: "user", select: "avatar username _id" },
+        },
+      ],
+      options: { sort: { createdAt: 1 } },
     });
 };
 
@@ -42,6 +50,31 @@ const getPostReplies = async (id, currentUser, page = 1, pageSize = 10) => {
   });
 };
 
+const getPostQuotedBy = async (id, currentUser, page = 1, pageSize = 10) => {
+  const skip = (parseInt(page) - 1) * parseInt(pageSize);
+
+  return await Post.findById(id).populate({
+    path: "quotedBy",
+    match: {
+      isDeleted: { $ne: true },
+      "user._id": { $nin: currentUser.blockedUsers },
+      "user._id": { $nin: currentUser.blockedBy },
+    },
+    populate: [
+      { path: "user", select: "avatar username _id" },
+      {
+        path: "quotedPost",
+        populate: { path: "user", select: "avatar username _id" },
+      },
+    ],
+    options: {
+      sort: { createdAt: -1 },
+      skip,
+      limit: parseInt(pageSize),
+    },
+  });
+};
+
 const createPost = async (content, user) => {
   const post = new Post({ content, user: user.id });
   const newPostDocument = await post.save();
@@ -59,7 +92,11 @@ const createReply = async (content, parent, user) => {
     user: user.id,
     parents: [parent.id, ...parent.parents],
   });
-  const newPost = await post.save();
+  const newPostDocument = await post.save();
+  const newPost = await newPostDocument.populate({
+    path: "user",
+    select: "avatar username _id",
+  });
   await user.updateOne({ $push: { replies: newPost.id } });
   await parent.updateOne({ $push: { replies: newPost.id } });
   return newPost;
@@ -137,4 +174,5 @@ module.exports = {
   deletePost,
   updatePost,
   getFeed,
+  getPostQuotedBy,
 };

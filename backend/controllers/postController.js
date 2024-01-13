@@ -23,18 +23,18 @@ const getPostById = async (req, res) => {
           user._id.equals(new mongoose.Types.ObjectId(post.user.id))
         ))
     ) {
-      post.content = "Post content has been hidden";
+      post.content = "[hidden]";
     }
 
-    // Check if the post has been deleted
+    // Check if the [deleted]
     if (post.isDeleted) {
-      //   return res.status(status.GONE).json({ message: "Post has been deleted" });
-      post.content = "Post has been deleted";
+      //   return res.status(status.GONE).json({ message: "[deleted]" });
+      post.content = "[deleted]";
     }
 
     // Check if the quotedPost is not deleted
     if (post.quotedPost && post.quotedPost.isDeleted) {
-      post.quotedPost.content = "Post has been deleted";
+      post.quotedPost.content = "[deleted]";
     } else if (
       // Check if the user of the quotedPost is blocked
       post.quotedPost &&
@@ -45,7 +45,7 @@ const getPostById = async (req, res) => {
           user._id.equals(new mongoose.Types.ObjectId(post.quotedPost.user.id))
         ))
     ) {
-      post.quotedPost.content = "Post content has been hidden";
+      post.quotedPost.content = "[hidden]";
     }
 
     // Check the parents of the post
@@ -53,7 +53,7 @@ const getPostById = async (req, res) => {
       post.parents = post.parents.map((parent) => {
         // Check if the parent has been deleted
         if (parent.isDeleted) {
-          parent.content = "Post has been deleted";
+          parent.content = "[deleted]";
         } else if (
           // Check if the user of the parent is blocked
           parent.user &&
@@ -64,7 +64,7 @@ const getPostById = async (req, res) => {
               user._id.equals(new mongoose.Types.ObjectId(parent.user.id))
             ))
         ) {
-          parent.content = "Post content has been hidden";
+          parent.content = "[hidden]";
         }
         return parent;
       });
@@ -91,6 +91,31 @@ const getPostReplies = async (req, res) => {
     }
 
     return res.status(status.OK).json({ replies: post.replies });
+  } catch (err) {
+    console.error(err.message);
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ message: "Internal Server Error" });
+  }
+};
+
+const getPostQuotedBy = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { page = 1, pageSize = 10 } = req.query;
+
+    const post = await postService.getPostQuotedBy(
+      id,
+      req.user,
+      page,
+      pageSize
+    );
+
+    if (!post) {
+      return res.status(status.NOT_FOUND).json({ message: "Post not found" });
+    }
+
+    return res.status(status.OK).json({ quotedBy: post.quotedBy });
   } catch (err) {
     console.error(err.message);
     return res
@@ -128,9 +153,7 @@ const createReply = async (req, res) => {
 
     // I have to think ab it
     if (parent.isDeleted) {
-      return res
-        .status(status.NOT_FOUND)
-        .json({ message: "Parent post has been deleted" });
+      return res.status(status.NOT_FOUND).json({ message: "Parent [deleted]" });
     }
 
     const savedPost = await postService.createReply(content, parent, req.user);
@@ -249,7 +272,7 @@ const getFeed = async (req, res) => {
 
     posts.forEach((post) => {
       if (post.quotedPost && post.quotedPost.isDeleted) {
-        post.quotedPost.content = "Post has been deleted";
+        post.quotedPost.content = "[deleted]";
       } else if (
         post.quotedPost &&
         (req.user.blockedUsers.some((user) =>
@@ -261,7 +284,7 @@ const getFeed = async (req, res) => {
             )
           ))
       ) {
-        post.quotedPost.content = "Post content has been hidden";
+        post.quotedPost.content = "[hidden]";
       }
     });
 
@@ -283,4 +306,5 @@ module.exports = {
   deletePost,
   updatePost,
   getFeed,
+  getPostQuotedBy,
 };
