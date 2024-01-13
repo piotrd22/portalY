@@ -1,6 +1,10 @@
 <template>
-  <router-link :to="`/post/${post._id}`" class="post-link">
-    <div class="post">
+  <router-link
+    :to="`/post/${post._id}`"
+    :key="`/post/${post._id}`"
+    class="post-link"
+  >
+    <div :class="getPostClasses">
       <router-link
         v-if="post.user"
         :to="`/profile/${post.user._id}`"
@@ -42,6 +46,7 @@
       <router-link
         v-if="post.quotedPost"
         :to="`/post/${post.quotedPost._id}`"
+        :key="`/post/${post.quotedPost._id}`"
         class="quoted-link"
       >
         <div v-if="post.quotedPost" class="quoted-post">
@@ -83,7 +88,9 @@
           <v-icon class="v-icon quote-icon" @click.prevent="openQuotePostDialog"
             >mdi-format-quote-close</v-icon
           >
-          <span>{{ post.quotedBy.length }}</span>
+          <router-link :to="`/post/${post._id}/quotes`" class="quote-link">
+            {{ post.quotedBy.length }}
+          </router-link>
         </div>
         <div v-if="isThisUserPost(post)">
           <v-icon @click.prevent="openUpdatePostDialog" class="update-icon"
@@ -230,6 +237,25 @@ export default {
       type: Function,
       required: true,
     },
+    isMain: {
+      type: Boolean,
+      default: false,
+    },
+    isParent: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  computed: {
+    getPostClasses() {
+      if (this.isMain) {
+        return "main-post";
+      } else if (this.isParent) {
+        return "post-parent";
+      } else {
+        return "post";
+      }
+    },
   },
   methods: {
     formatDate(date) {
@@ -334,6 +360,18 @@ export default {
   border: 1px solid #ddd;
 }
 
+.post-parent {
+  margin-bottom: 10px;
+  padding: 10px;
+  border-left: 2px solid #ddd;
+}
+
+.main-post {
+  margin-bottom: 20px;
+  padding: 10px;
+  border: 2px solid #ddd;
+}
+
 .content {
   margin-left: 10px;
   margin-bottom: 10px;
@@ -419,5 +457,9 @@ export default {
 
 .reply-icon:hover {
   color: #009688;
+}
+
+.quote-length:hover {
+  color: #9c27b0;
 }
 </style>

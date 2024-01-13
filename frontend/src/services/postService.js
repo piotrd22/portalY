@@ -30,4 +30,16 @@ export default {
     };
     return apiClient.post("/post/reply", body, { withCredentials: true });
   },
+  getPostById(id) {
+    const uri = `/post/${id}`;
+    return apiClient.get(uri, { withCredentials: true });
+  },
+  getPostReplies(id, page) {
+    const uri = `/post/${id}/replies?page=${page}`;
+    return apiClient.get(uri, { withCredentials: true });
+  },
+  getPostQuotedBy(id, page) {
+    const uri = `/post/${id}/quoted?page=${page}`;
+    return apiClient.get(uri, { withCredentials: true });
+  },
 };

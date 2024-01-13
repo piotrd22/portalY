@@ -1,5 +1,8 @@
 <template>
   <v-app-bar app>
+    <v-btn v-if="isGoBackPage" @click="goBack">
+      <v-icon>mdi-arrow-left</v-icon>
+    </v-btn>
     <v-toolbar-title>
       <v-btn @click="navigateToHomeOrFeed" text>
         <span class="portal-text">PortalY</span>
@@ -25,6 +28,15 @@ export default {
     window.addEventListener("isLoggedIn-localstorage-changed", (event) => {
       this.isLoggedIn = event.detail.storage;
     });
+  },
+  computed: {
+    isGoBackPage() {
+      return (
+        this.$route.name === "PostThread" ||
+        this.$route.name === "PostQuotedBy" ||
+        this.$route.name === "Profile"
+      );
+    },
   },
   methods: {
     async logout() {
@@ -64,6 +76,9 @@ export default {
     navigateToHomeOrFeed() {
       const routeName = this.isLoggedIn ? "Feed" : "Home";
       this.$router.push({ name: routeName });
+    },
+    goBack() {
+      this.$router.go(-1);
     },
   },
 };

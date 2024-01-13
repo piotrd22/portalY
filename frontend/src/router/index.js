@@ -1,6 +1,9 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Home from "../views/Home.vue";
 import Feed from "../views/Feed.vue";
+import PostThread from "../views/PostThread.vue";
+import PostQuotedBy from "../views/PostQuotedBy.vue";
+import Profile from "../views/Profile.vue";
 import NotFound from "../views/NotFound.vue";
 
 const routes = [
@@ -13,6 +16,27 @@ const routes = [
     path: "/feed",
     name: "Feed",
     component: Feed,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/post/:id",
+    name: "PostThread",
+    component: PostThread,
+    props: true, // Passes id as a property of the component
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/post/:id/quotes",
+    name: "PostQuotedBy",
+    component: PostQuotedBy,
+    props: true, // Passes id as a property of the component
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/profile/:id",
+    name: "Profile",
+    component: Profile,
+    props: true, // Passes id as a property of the component
     meta: { requiresAuth: true },
   },
   { path: "/:pathMatch(.*)*", component: NotFound },
