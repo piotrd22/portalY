@@ -38,8 +38,9 @@ const getPostReplies = async (id, currentUser, page = 1, pageSize = 10) => {
     path: "replies",
     match: {
       isDeleted: { $ne: true },
-      "user._id": { $nin: currentUser.blockedUsers },
-      "user._id": { $nin: currentUser.blockedBy },
+      user: {
+        $nin: [...currentUser.blockedUsers, ...currentUser.blockedBy],
+      },
     },
     populate: { path: "user", select: "avatar username _id" },
     options: {
@@ -57,8 +58,9 @@ const getPostQuotedBy = async (id, currentUser, page = 1, pageSize = 10) => {
     path: "quotedBy",
     match: {
       isDeleted: { $ne: true },
-      "user._id": { $nin: currentUser.blockedUsers },
-      "user._id": { $nin: currentUser.blockedBy },
+      user: {
+        $nin: [...currentUser.blockedUsers, ...currentUser.blockedBy],
+      },
     },
     populate: [
       { path: "user", select: "avatar username _id" },
@@ -146,8 +148,9 @@ const getFeed = async (currentUser, page = 1, pageSize = 10) => {
   return await Post.find({
     $or: [{ user: { $in: currentUser.following } }, { user: currentUser._id }],
     isDeleted: { $ne: true },
-    "user._id": { $nin: currentUser.blockedUsers },
-    "user._id": { $nin: currentUser.blockedBy },
+    user: {
+      $nin: [...currentUser.blockedUsers, ...currentUser.blockedBy],
+    },
     parents: { $size: 0 },
   })
     .populate({

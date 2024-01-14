@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const userMapper = require("../mappers/userMapper");
 const userService = require("../services/userService");
 const imagekit = require("../config/imagekit");
+const mongoose = require("mongoose");
 
 const getUserById = async (req, res) => {
   try {
@@ -180,7 +181,7 @@ const unblockUser = async (req, res) => {
         .json({ message: "You already unblocked this user" });
     }
 
-    await userService.unblockUser(user, userToUnblock);
+    await userService.unblockUser(req.user, userToUnblock);
 
     return res.status(status.OK).json({ messgae: "User has been ublocked" });
   } catch (err) {
@@ -376,6 +377,27 @@ const getUserPosts = async (req, res) => {
 
     const posts = userWithPosts.posts;
 
+    if (posts.length > 0) {
+      posts.map((post) => {
+        if (
+          post.quotedPost &&
+          (req.user.blockedUsers.some((user) =>
+            user._id.equals(
+              new mongoose.Types.ObjectId(post.quotedPost.user.id)
+            )
+          ) ||
+            req.user.blockedBy.some((user) =>
+              user._id.equals(
+                new mongoose.Types.ObjectId(post.quotedPost.user.id)
+              )
+            ))
+        ) {
+          post.quotedPost.content = "[hidden]";
+        }
+        return post;
+      });
+    }
+
     return res.status(status.OK).json({ posts });
   } catch (err) {
     console.error(err.message);
@@ -401,6 +423,27 @@ const getUserReplies = async (req, res) => {
     }
 
     const replies = userWithReplies.replies;
+
+    if (replies.length > 0) {
+      replies = replies.map((post) => {
+        post.parents = post.parents.map((parent) => {
+          if (parent.isDeleted) {
+            parent.content = "[deleted]";
+          } else if (
+            parent.user &&
+            (req.user.blockedUsers.some((user) =>
+              user._id.equals(new mongoose.Types.ObjectId(parent.user.id))
+            ) ||
+              req.user.blockedBy.some((user) =>
+                user._id.equals(new mongoose.Types.ObjectId(parent.user.id))
+              ))
+          ) {
+            parent.content = "[hidden]";
+          }
+          return parent;
+        });
+      });
+    }
 
     return res.status(status.OK).json({ replies });
   } catch (err) {

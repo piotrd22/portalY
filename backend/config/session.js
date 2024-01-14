@@ -26,6 +26,12 @@ const sessionMiddleware = expressSession({
   resave: false,
   expires: 1000 * 60 * 60 * 24 * 30, // 30 days
   store: mongoStore,
+
+  // This solves the problem with cookies for applications in Chromium based browsers
+  cookie: {
+    sameSite: "none",
+    secure: true,
+  },
 });
 
 module.exports = sessionMiddleware;

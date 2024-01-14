@@ -125,15 +125,20 @@ const getUserPosts = async (id, page = 1, pageSize = 10) => {
       skip,
       limit: parseInt(pageSize),
     },
-    populate: {
-      path: "user",
-      select: "_id avatar username",
-    },
-    populate: {
-      path: "quotedPost",
-      select: "content user _id createdAt updatedAt isDeleted",
-      populate: { path: "user", select: "avatar username _id" },
-    },
+    populate: [
+      {
+        path: "user",
+        select: "_id avatar username",
+      },
+      {
+        path: "quotedPost",
+        select: "content user _id createdAt updatedAt isDeleted",
+        populate: {
+          path: "user",
+          select: "avatar username _id",
+        },
+      },
+    ],
   });
 };
 
@@ -147,16 +152,18 @@ const getUserReplies = async (id, page = 1, pageSize = 10) => {
       skip,
       limit: parseInt(pageSize),
     },
-    populate: {
-      path: "user",
-      select: "_id avatar username",
-    },
-    populate: {
-      path: "parents",
-      select: "content user _id createdAt updatedAt isDeleted",
-      populate: { path: "user", select: "avatar username _id" },
-      options: { sort: { createdAt: -1 } },
-    },
+    populate: [
+      {
+        path: "user",
+        select: "_id avatar username",
+      },
+      {
+        path: "parents",
+        select: "content user _id createdAt updatedAt isDeleted",
+        populate: { path: "user", select: "avatar username _id" },
+        options: { sort: { createdAt: -1 } },
+      },
+    ],
   });
 };
 

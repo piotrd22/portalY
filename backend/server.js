@@ -1,5 +1,4 @@
 const express = require("express");
-const path = require("path");
 const https = require("https");
 const helmet = require("helmet");
 const fs = require("fs");
@@ -48,6 +47,29 @@ const postRoutes = require("./routes/postRoutes");
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/post", postRoutes);
+
+// WebSockets
+const sio = require("socket.io")(server, {
+  cors: corsOptions,
+  transports: ["websocket"],
+});
+const wrap = (middleware) => (socket, next) =>
+  middleware(socket.request, {}, next);
+
+sio.use(wrap(sessionMiddleware));
+sio.use(wrap(passport.initialize()));
+sio.use(wrap(passport.session()));
+
+sio.use((socket, next) => {
+  if (socket.request.user) {
+    next();
+  } else {
+    next(new Error("Forbidden!"));
+  }
+});
+
+const socketServer = require("./socket/socketServer.js");
+socketServer(sio);
 
 // Application startup
 const start = async () => {
