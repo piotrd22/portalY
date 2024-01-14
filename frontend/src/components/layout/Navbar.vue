@@ -8,7 +8,26 @@
         <span class="portal-text">PortalY</span>
       </v-btn>
     </v-toolbar-title>
-    <v-btn v-if="isLoggedIn" @click="logout" text> Logout </v-btn>
+
+    <v-btn v-if="isLoggedIn && user.username" @click="navigateToProfile" text>
+      @{{ user.username }}
+      <v-avatar size="36" class="avatar">
+        <img
+          v-if="user.avatar"
+          :src="user.avatar"
+          alt="User Avatar"
+          class="avatar-image"
+        />
+        <img
+          v-else
+          src="../../assets/default-avatar.jpg"
+          alt="User Avatar"
+          class="avatar-image"
+        />
+      </v-avatar>
+    </v-btn>
+
+    <v-btn v-if="isLoggedIn" @click="logout" text>Logout</v-btn>
   </v-app-bar>
 </template>
 
@@ -19,14 +38,20 @@ export default {
   data() {
     return {
       isLoggedIn: false,
+      user: null,
     };
   },
   mounted() {
     this.isLoggedIn = JSON.parse(localStorage.getItem("isLoggedIn")) || false;
+    this.user = JSON.parse(localStorage.getItem("user")) || {};
 
     // https://stackoverflow.com/questions/42974170/is-there-any-way-to-watch-for-localstorage-in-vuejs
     window.addEventListener("isLoggedIn-localstorage-changed", (event) => {
       this.isLoggedIn = event.detail.storage;
+    });
+
+    window.addEventListener("user-localstorage-changed", (event) => {
+      this.user = event.detail.user;
     });
   },
   computed: {
@@ -34,7 +59,9 @@ export default {
       return (
         this.$route.name === "PostThread" ||
         this.$route.name === "PostQuotedBy" ||
-        this.$route.name === "Profile"
+        this.$route.name === "Profile" ||
+        this.$route.name === "NotFound" ||
+        this.$route.name === "EditProfile"
       );
     },
   },
@@ -52,23 +79,18 @@ export default {
           })
         );
 
-        localStorage.removeItem("userId");
-
-        this.$router.push({ name: "Home" });
-      } catch (err) {
-        console.error("Logout error:", err);
-
-        localStorage.setItem("isLoggedIn", JSON.stringify(false));
+        localStorage.removeItem("user");
         window.dispatchEvent(
-          new CustomEvent("isLoggedIn-localstorage-changed", {
+          new CustomEvent("user-localstorage-changed", {
             detail: {
               storage: false,
             },
           })
         );
 
-        localStorage.removeItem("userId");
-
+        this.$router.push({ name: "Home" });
+      } catch (err) {
+        console.error("Logout error:", err);
         const errorMessage = err.response?.data.message || "Logout failed.";
         this.$toast.error(errorMessage);
       }
@@ -80,6 +102,10 @@ export default {
     goBack() {
       this.$router.go(-1);
     },
+    navigateToProfile() {
+      const id = this.user._id;
+      this.$router.push({ name: "Profile", params: { id } });
+    },
   },
 };
 </script>
@@ -88,5 +114,14 @@ export default {
 .portal-text {
   font-weight: bold;
   font-size: 1.2em;
+}
+
+.avatar-image {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 50%;
+}
+.avatar {
+  margin-left: 10px;
 }
 </style>

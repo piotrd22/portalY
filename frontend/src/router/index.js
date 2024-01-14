@@ -4,6 +4,7 @@ import Feed from "../views/Feed.vue";
 import PostThread from "../views/PostThread.vue";
 import PostQuotedBy from "../views/PostQuotedBy.vue";
 import Profile from "../views/Profile.vue";
+import EditProfile from "../views/EditProfile.vue";
 import NotFound from "../views/NotFound.vue";
 
 const routes = [
@@ -39,7 +40,14 @@ const routes = [
     props: true, // Passes id as a property of the component
     meta: { requiresAuth: true },
   },
-  { path: "/:pathMatch(.*)*", component: NotFound },
+  {
+    path: "/profile/:id/edit",
+    name: "EditProfile",
+    component: EditProfile,
+    props: true, // Passes id as a property of the component
+    meta: { requireMe: true },
+  },
+  { path: "/:pathMatch(.*)*", name: "NotFound", component: NotFound },
 ];
 
 const router = createRouter({
@@ -58,6 +66,14 @@ router.beforeEach((to, _, next) => {
       next();
     } else {
       next({ name: "Home" });
+    }
+  } else if (to.meta.requireMe) {
+    const user = JSON.parse(localStorage.getItem("user"));
+    const propsId = to.params.id;
+    if (user && propsId && user._id === propsId) {
+      next();
+    } else {
+      next({ name: "NotFound" });
     }
   } else if (to.name === "Home" && isAuthenticated()) {
     next({ name: "Feed" });

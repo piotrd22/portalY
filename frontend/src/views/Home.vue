@@ -135,9 +135,22 @@ export default {
             password: this.loginPassword,
           });
           this.closeLoginDialog();
-          localStorage.setItem("userId", JSON.stringify(res.data._id));
 
           // https://stackoverflow.com/questions/42974170/is-there-any-way-to-watch-for-localstorage-in-vuejs
+          const localStorageUser = {
+            _id: res.data._id,
+            avatar: res.data.avatar,
+            username: res.data.username,
+          };
+          localStorage.setItem("user", JSON.stringify(localStorageUser));
+          window.dispatchEvent(
+            new CustomEvent("user-localstorage-changed", {
+              detail: {
+                user: localStorageUser,
+              },
+            })
+          );
+
           localStorage.setItem("isLoggedIn", JSON.stringify(true));
           window.dispatchEvent(
             new CustomEvent("isLoggedIn-localstorage-changed", {

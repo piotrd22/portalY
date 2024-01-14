@@ -25,6 +25,7 @@
       v-if="post"
       :postId="post._id"
       :addPostFromParent="addRepliesPostFromParent"
+      :addPostToThreadSocket="addPostToThreadSocket"
     ></reply-post-form>
 
     <v-infinite-scroll :onLoad="loadMoreReplies" :items="replies">
@@ -44,6 +45,7 @@
 import postService from "../services/postService";
 import Post from "../components/Post.vue";
 import ReplyPostForm from "../components/ReplyPostForm.vue";
+import socket from "../socket";
 
 export default {
   props: {
@@ -58,10 +60,13 @@ export default {
       replies: [],
       post: null,
       page: 1,
+      room: "",
+      timeoutId: null,
     };
   },
   watch: {
     async $route() {
+      this.leaveRoom();
       this.page = 1;
       this.replies = [];
       await this.fetchPost();
@@ -70,10 +75,34 @@ export default {
       } else {
         window.scrollTo(0, 0);
       }
+      this.joinRoom();
     },
   },
-  async created() {
-    await this.fetchPost();
+  mounted() {
+    socket.on("newPosts", () => {
+      // timeoutId is useful when there are new posts,
+      // but we don't want to show messages every time there are new posts,
+      // so we wait X seconds to display such a toast
+      if (!this.timeoutId) {
+        this.timeoutId = setTimeout(() => {
+          this.$toast.clear();
+          this.$toast.info(
+            "New posts have been added to the thread you are in. Refresh the page.",
+            {
+              duration: 10000,
+            }
+          );
+          this.timeoutId = null;
+        }, 10000);
+      }
+    });
+  },
+  created() {
+    this.fetchPost();
+    this.joinRoom();
+  },
+  beforeUnmount() {
+    this.leaveRoom();
   },
   methods: {
     async fetchPost() {
@@ -124,7 +153,7 @@ export default {
       }
     },
     deleteRepliesPostFromParent(id) {
-      this.replies = this.feed.filter((post) => post._id !== id);
+      this.replies = this.replies.filter((post) => post._id !== id);
     },
     updateParentsPostFromParent(newPost) {
       const postToUpdate = this.parents.find(
@@ -145,6 +174,19 @@ export default {
     },
     deleteMainPostFromParent(_) {
       this.post.content = "[deleted]";
+    },
+    joinRoom() {
+      this.room = `/post/${this.id}`;
+      socket.emit("joinRoom", this.room);
+    },
+    leaveRoom() {
+      socket.emit("leaveRoom", this.room);
+      this.room = "";
+      clearTimeout(this.timeoutId);
+      this.timeoutId = null;
+    },
+    addPostToThreadSocket() {
+      socket.emit("newPost", this.room);
     },
   },
   components: {

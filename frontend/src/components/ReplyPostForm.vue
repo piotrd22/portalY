@@ -33,6 +33,7 @@ export default {
         );
         this.newReply = "";
         this.addPostFromParent(response.data.post);
+        this.addPostToThreadSocket();
         this.$toast.success("Reply successfully added!");
       } catch (err) {
         console.error("createReply() ReplyPostForm.vue error:", err);
@@ -43,6 +44,10 @@ export default {
   },
   props: {
     addPostFromParent: {
+      type: Function,
+      required: true,
+    },
+    addPostToThreadSocket: {
       type: Function,
       required: true,
     },

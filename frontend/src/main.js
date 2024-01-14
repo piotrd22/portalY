@@ -24,15 +24,15 @@ import authService from "./services/authService";
 const checkIsAuthenticated = async () => {
   try {
     const response = await authService.isAuthenticated();
-    if (response.data.isLoggedIn && response.data.userId) {
+    if (response.data.isLoggedIn && response.data.user) {
       localStorage.setItem(
         "isLoggedIn",
         JSON.stringify(response.data.isLoggedIn)
       );
-      localStorage.setItem("userId", JSON.stringify(response.data.userId));
+      localStorage.setItem("user", JSON.stringify(response.data.user));
     } else {
       localStorage.removeItem("isLoggedIn");
-      localStorage.removeItem("userId");
+      localStorage.removeItem("user");
     }
   } catch (err) {
     console.error("checkIsAuthenticated() main.js error: ", err);
