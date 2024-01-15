@@ -1,5 +1,14 @@
 <template>
-  <v-container class="custom-container" v-if="user">
+  <v-container class="custom-container" v-if="isBlocked">
+    <div v-if="isBlocked">
+      <Blocked
+        :blockedBy="blockedBy"
+        :unblockUser="unblockUser"
+        :message="blockedMessage"
+      />
+    </div>
+  </v-container>
+  <v-container class="custom-container" v-else-if="user">
     <div class="header-container">
       <div class="avatar-container">
         <v-avatar size="175">
@@ -48,7 +57,7 @@
               :to="'/profile/' + id + '/followers'"
               class="router-link"
             >
-              <span>{{ user.followers.length }} Followers</span>
+              <span>{{ followersLength }} Followers</span>
             </router-link>
           </div>
 
@@ -57,7 +66,7 @@
               :to="'/profile/' + id + '/following'"
               class="router-link"
             >
-              <span>{{ user.following.length }} Following</span>
+              <span>{{ followingLength }} Following</span>
             </router-link>
           </div>
         </div>
@@ -101,7 +110,21 @@
             </v-infinite-scroll>
           </v-window-item>
 
-          <v-window-item value="replies"> Two </v-window-item>
+          <v-window-item value="replies">
+            <v-infinite-scroll :onLoad="loadUserReplies" :items="replies">
+              <div v-for="reply in replies" :key="reply._id">
+                <PostWithParent
+                  :post="reply"
+                  :addPostFromParent="addPostFromParent"
+                  :deletePostFromParent="deleteReplyPostFromParent"
+                  :updatePostFromParent="updateReplyPostFromParent"
+                  :updateParentPostFromParent="updateReplyParentPostFromParent"
+                  :deleteParentPostFromParent="deleteReplyParentPostFromParent"
+                  :replyToPostFromParent="replyToPostFromParent"
+                />
+              </div>
+            </v-infinite-scroll>
+          </v-window-item>
         </v-window>
       </v-card-text>
     </v-card>
@@ -111,6 +134,8 @@
 <script>
 import userService from "../services/userService";
 import Post from "../components/Post.vue";
+import Blocked from "../components/Blocked.vue";
+import PostWithParent from "../components/PostWithParent.vue";
 
 export default {
   props: {
@@ -122,6 +147,8 @@ export default {
   data() {
     return {
       user: null,
+      followersLength: 0,
+      followingLength: 0,
       loggedInUserId: null,
       isFollowedUser: false,
       tab: null,
@@ -129,6 +156,9 @@ export default {
       postsPage: 1,
       replies: [],
       repliesPage: 1,
+      isBlocked: false,
+      blockedBy: false,
+      blockedMessage: "",
     };
   },
   watch: {
@@ -149,8 +179,16 @@ export default {
         const response = await userService.getUserById(this.id);
         this.user = response.data.user;
         this.isFollowedUser = this.user.followers.includes(this.loggedInUserId);
+        this.followersLength = this.user.followers.length;
+        this.followingLength = this.user.following.length;
       } catch (err) {
-        console.error("getUserById() Profile.vue error:", err);
+        if (err.response && err.response.status === 403) {
+          this.isBlocked = true;
+          this.blockedBy = err.response.data?.blockedBy;
+          this.blockedMessage = err.response.data?.message;
+        } else {
+          console.error("getUserById() Profile.vue error:", err);
+        }
       }
     },
     getLoggedInUserId() {
@@ -166,6 +204,7 @@ export default {
         await userService.followUser(this.id);
         this.isFollowedUser = true;
         this.$toast.success("User has been followed.");
+        this.followersLength++;
       } catch (err) {
         console.error("followUser() Profile.vue error:", err);
         const errorMessage =
@@ -178,6 +217,7 @@ export default {
         await userService.unfollowUser(this.id);
         this.isFollowedUser = false;
         this.$toast.success("User has been unfollowed.");
+        this.followersLength--;
       } catch (err) {
         console.error("unfollowUser() Profile.vue error:", err);
         const errorMessage =
@@ -189,10 +229,23 @@ export default {
       try {
         await userService.blockUser(this.id);
         this.$toast.success("User has been blocked.");
+        location.reload();
       } catch (err) {
         console.error("blockUser() Profile.vue error:", err);
         const errorMessage =
           err?.response?.data.message || "Blocking user failed.";
+        this.$toast.error(errorMessage);
+      }
+    },
+    async unblockUser() {
+      try {
+        await userService.unblockUser(this.id);
+        this.$toast.success("User has been unblocked.");
+        location.reload();
+      } catch (err) {
+        console.error("unblockUser() Profile.vue error:", err);
+        const errorMessage =
+          err?.response?.data.message || "Unblocking user failed.";
         this.$toast.error(errorMessage);
       }
     },
@@ -225,9 +278,79 @@ export default {
     quotePostFromParent(newPost) {
       this.posts.unshift(newPost);
     },
+    async loadUserReplies({ done }) {
+      try {
+        const response = await userService.getUserReplies(
+          this.id,
+          this.repliesPage
+        );
+        if (response.data.replies.length === 0) {
+          return done("empty");
+        }
+        this.replies.push(...response.data.replies);
+        this.repliesPage++;
+        done("ok");
+      } catch (err) {
+        done("error");
+        console.error("loadUserReplies() Profile.vue error:", err);
+      }
+    },
+    addPostFromParent(newPost) {
+      this.posts.unshift(newPost);
+    },
+    deleteReplyPostFromParent(id) {
+      this.replies = this.replies.filter((post) => post._id !== id);
+    },
+    updateReplyPostFromParent(newPost) {
+      const postToUpdate = this.replies.find(
+        (post) => post._id === newPost._id
+      );
+      if (postToUpdate) {
+        postToUpdate.content = newPost.content;
+      }
+    },
+    updateReplyParentPostFromParent(newPost) {
+      const postsToUpdate = this.replies.filter((post) =>
+        post.parents.some((parent, index) => {
+          const lastParentIndex = post.parents.length - 1;
+          return parent._id === newPost._id && index === lastParentIndex;
+        })
+      );
+
+      postsToUpdate.forEach((postToUpdate) => {
+        const lastParentIndex = postToUpdate.parents.length - 1;
+        const lastParent = postToUpdate.parents[lastParentIndex];
+
+        if (lastParent) {
+          lastParent.content = newPost.content;
+        }
+      });
+    },
+    deleteReplyParentPostFromParent(id) {
+      const postsToUpdate = this.replies.filter((post) =>
+        post.parents.some((parent, index) => {
+          const lastParentIndex = post.parents.length - 1;
+          return parent._id === id && index === lastParentIndex;
+        })
+      );
+
+      postsToUpdate.forEach((postToUpdate) => {
+        const lastParentIndex = postToUpdate.parents.length - 1;
+        const lastParent = postToUpdate.parents[lastParentIndex];
+
+        if (lastParent) {
+          lastParent.content = "[deleted]";
+        }
+      });
+    },
+    replyToPostFromParent(newPost) {
+      console.log("todo");
+    },
   },
   components: {
     Post,
+    Blocked,
+    PostWithParent,
   },
 };
 </script>

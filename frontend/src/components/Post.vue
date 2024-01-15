@@ -89,7 +89,7 @@
             >mdi-format-quote-close</v-icon
           >
           <router-link :to="`/post/${post._id}/quotes`" class="quote-link">
-            {{ post.quotedBy.length }}
+            {{ quotedLength }}
           </router-link>
         </div>
         <div v-if="isThisUserPost(post)">
@@ -207,6 +207,7 @@
 
 <script>
 import postService from "../services/postService";
+import socket from "../socket";
 
 export default {
   data() {
@@ -216,6 +217,7 @@ export default {
       deletePostDialog: false,
       quotePostDialog: false,
       quotePostContent: "",
+      quotedLength: this.post.quotedBy.length,
       replyPostDialog: false,
       replyPostContent: "",
     };
@@ -245,6 +247,7 @@ export default {
       type: Boolean,
       default: false,
     },
+    replyToPostFromParent: Function,
   },
   computed: {
     getPostClasses() {
@@ -310,6 +313,7 @@ export default {
       this.quotePostDialog = true;
     },
     closeQuotePostDialog() {
+      this.quotePostContent = "";
       this.quotePostDialog = false;
     },
     async quotePost() {
@@ -320,6 +324,8 @@ export default {
         );
         this.closeQuotePostDialog();
         this.$toast.success("Post successfully quoted!");
+        this.quotedLength++;
+        this.quotePostContent = "";
         this.addPostFromParent(response.data.post);
       } catch (err) {
         console.error("quotePost() Post.vue error:", err);
@@ -332,7 +338,7 @@ export default {
       this.replyPostDialog = true;
     },
     closeReplyPostDialog() {
-      this.replyPostDialog = false;
+      (this.replyPostContent = ""), (this.replyPostDialog = false);
     },
     async createReply() {
       try {
@@ -343,11 +349,19 @@ export default {
         this.closeReplyPostDialog();
         this.$toast.success("Reply successfully added!");
         this.post.replies.push(response.data.post);
+        this.replyPostContent = "";
+        this.addPostToThreadSocket();
+        if (this.replyToPostFromParent) {
+          this.replyToPostFromParent();
+        }
       } catch (err) {
         console.error("createReply() Post.vue error:", err);
         const errorMessage = err?.response?.data.message || "Replying failed.";
         this.$toast.error(errorMessage);
       }
+    },
+    addPostToThreadSocket() {
+      socket.emit("newPost", `/post/${this.post._id}`);
     },
   },
 };
