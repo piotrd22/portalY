@@ -18,7 +18,6 @@ module.exports = (sio) => {
 
     // TODO Change it so that there is no timeout on the side and move it to the front. On the front end, in the thread, you will collect information and simply display these things.
     socket.on("newPost", (room) => {
-      console.log("newPost event");
       socket.to(room).emit("newPosts"); // To everyone in the room except this user
       // newPostsCount++;
       // if (!timeoutId) {

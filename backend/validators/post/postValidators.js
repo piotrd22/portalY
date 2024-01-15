@@ -1,5 +1,10 @@
 const commonValidators = require("../commonValidators");
 
+const createPostValidator = commonValidators.createValidator([
+  async (req) =>
+    commonValidators.validateNotEmpty(req.body.content, "Post content"),
+]);
+
 const createReplyValidator = commonValidators.createValidator([
   async (req) =>
     commonValidators.validateNotEmpty(req.body.parentId, "Parent Id"),
@@ -14,4 +19,8 @@ const createQuoteValidator = commonValidators.createValidator([
     commonValidators.validateMongoId(req.body.quotedPostId, "Quoted Post Id"),
 ]);
 
-module.exports = { createReplyValidator, createQuoteValidator };
+module.exports = {
+  createReplyValidator,
+  createQuoteValidator,
+  createPostValidator,
+};

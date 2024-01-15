@@ -379,7 +379,9 @@ const getUserPosts = async (req, res) => {
 
     if (posts.length > 0) {
       posts.map((post) => {
-        if (
+        if (post.quotedPost && post.quotedPost.isDeleted) {
+          post.quotedPost.content = "[deleted]";
+        } else if (
           post.quotedPost &&
           (req.user.blockedUsers.some((user) =>
             user._id.equals(
@@ -422,7 +424,7 @@ const getUserReplies = async (req, res) => {
       return res.status(status.NOT_FOUND).json({ message: "User not found" });
     }
 
-    const replies = userWithReplies.replies;
+    let replies = userWithReplies.replies;
 
     if (replies.length > 0) {
       replies = replies.map((post) => {
@@ -440,8 +442,49 @@ const getUserReplies = async (req, res) => {
           ) {
             parent.content = "[hidden]";
           }
+
+          if (parent.quotedPost) {
+            if (parent.quotedPost.isDeleted) {
+              parent.quotedPost.content = "[deleted]";
+            } else if (
+              parent.quotedPost.user &&
+              (req.user.blockedUsers.some((user) =>
+                user._id.equals(
+                  new mongoose.Types.ObjectId(parent.quotedPost.user.id)
+                )
+              ) ||
+                req.user.blockedBy.some((user) =>
+                  user._id.equals(
+                    new mongoose.Types.ObjectId(parent.quotedPost.user.id)
+                  )
+                ))
+            ) {
+              parent.quotedPost.content = "[hidden]";
+            }
+          }
           return parent;
         });
+
+        if (post.quotedPost) {
+          if (post.quotedPost.isDeleted) {
+            post.quotedPost.content = "[deleted]";
+          } else if (
+            post.quotedPost.user &&
+            (req.user.blockedUsers.some((user) =>
+              user._id.equals(
+                new mongoose.Types.ObjectId(post.quotedPost.user.id)
+              )
+            ) ||
+              req.user.blockedBy.some((user) =>
+                user._id.equals(
+                  new mongoose.Types.ObjectId(post.quotedPost.user.id)
+                )
+              ))
+          ) {
+            post.quotedPost.content = "[hidden]";
+          }
+        }
+        return post;
       });
     }
 

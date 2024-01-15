@@ -25,7 +25,11 @@ router.patch(
   postController.updatePost
 );
 
-router.post("/", authMiddleware.requireAuth, postController.createPost);
+router.post(
+  "/",
+  [authMiddleware.requireAuth, postValidators.createPostValidator],
+  postController.createPost
+);
 
 router.post(
   "/reply",

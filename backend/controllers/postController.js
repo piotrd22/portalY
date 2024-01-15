@@ -115,6 +115,24 @@ const getPostQuotedBy = async (req, res) => {
       return res.status(status.NOT_FOUND).json({ message: "Post not found" });
     }
 
+    post.quotedBy.forEach((post) => {
+      if (post.quotedPost && post.quotedPost.isDeleted) {
+        post.quotedPost.content = "[deleted]";
+      } else if (
+        post.quotedPost &&
+        (req.user.blockedUsers.some((user) =>
+          user._id.equals(new mongoose.Types.ObjectId(post.quotedPost.user.id))
+        ) ||
+          req.user.blockedBy.some((user) =>
+            user._id.equals(
+              new mongoose.Types.ObjectId(post.quotedPost.user.id)
+            )
+          ))
+      ) {
+        post.quotedPost.content = "[hidden]";
+      }
+    });
+
     return res.status(status.OK).json({ quotedBy: post.quotedBy });
   } catch (err) {
     console.error(err.message);

@@ -159,9 +159,20 @@ const getUserReplies = async (id, page = 1, pageSize = 10) => {
       },
       {
         path: "parents",
-        select: "content user _id createdAt updatedAt isDeleted",
-        populate: { path: "user", select: "avatar username _id" },
-        options: { sort: { createdAt: -1 } },
+        select:
+          "content user _id createdAt updatedAt isDeleted replies quotedBy quotedPost",
+        populate: [
+          { path: "user", select: "avatar username _id" },
+          {
+            path: "quotedPost",
+            select: "content user _id createdAt updatedAt isDeleted",
+            populate: {
+              path: "user",
+              select: "avatar username _id",
+            },
+          },
+        ],
+        options: { sort: { createdAt: 1 } },
       },
     ],
   });
