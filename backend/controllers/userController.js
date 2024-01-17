@@ -4,6 +4,7 @@ const userMapper = require("../mappers/userMapper");
 const userService = require("../services/userService");
 const imagekit = require("../config/imagekit");
 const mongoose = require("mongoose");
+const sharp = require("sharp");
 
 const getUserById = async (req, res) => {
   try {
@@ -42,6 +43,16 @@ const createUser = async (req, res) => {
 const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
+
+    const existingUser = await userService.getUserById(id);
+
+    if (!existingUser) {
+      return res.status(status.NOT_FOUND).json({ message: "User not found" });
+    }
+
+    if (existingUser.avatar && existingUser.avatarId) {
+      imagekit.deleteFile(existingUser.avatarId);
+    }
 
     await userService.deleteUser(id);
 
@@ -507,12 +518,17 @@ const updateAvatar = async (req, res) => {
       return res.status(status.NOT_FOUND).json({ message: "User not found" });
     }
 
+    const buffer = await sharp(req.file.buffer)
+      .resize({ width: 500, height: 500, fit: "cover" })
+      .toBuffer();
+
     const uploadResponse = await new Promise(async (resolve, reject) => {
       try {
         const response = await imagekit.upload({
-          file: req.file.buffer,
+          file: buffer,
           fileName: req.file.originalname,
           folder: "user_avatars",
+          fileType: "image",
         });
         resolve(response);
       } catch (error) {

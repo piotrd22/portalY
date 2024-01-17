@@ -51,6 +51,23 @@ const getPostById = async (req, res) => {
     // Check the parents of the post
     if (post.parents && post.parents.length > 0) {
       post.parents = post.parents.map((parent) => {
+        if (parent.quotedPost && parent.quotedPost.isDeleted) {
+          parent.quotedPost.content = "[deleted]";
+        } else if (
+          parent.quotedPost?.user &&
+          (req.user.blockedUsers.some((user) =>
+            user._id.equals(
+              new mongoose.Types.ObjectId(parent.quotedPost.user.id)
+            )
+          ) ||
+            req.user.blockedBy.some((user) =>
+              user._id.equals(
+                new mongoose.Types.ObjectId(parent.quotedPost.user.id)
+              )
+            ))
+        ) {
+          parent.quotedPost.content = "[hidden]";
+        }
         // Check if the parent has been deleted
         if (parent.isDeleted) {
           parent.content = "[deleted]";
