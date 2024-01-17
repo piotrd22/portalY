@@ -1,6 +1,7 @@
 <template>
-  <div v-if="post">
+  <div v-if="post && parent">
     <Post
+      v-if="parent"
       :post="parent"
       :isParent="true"
       :addPostFromParent="callAddPostFromParent"
@@ -25,8 +26,17 @@ import Post from "./Post.vue";
 export default {
   data() {
     return {
-      parent: this.post.parents[this.post.parents.length - 1],
+      parent: null,
     };
+  },
+  mounted() {
+    this.parent = this.post.parents[this.post.parents.length - 1];
+    // if (!this.parent?.user) {
+    //   this.parent.user = {}
+    //   // this.parent.user.username = "[deleted]"
+    //   // this.parent.user._id = "1"
+    //   // this.parent.user.avatar = ""
+    // }
   },
   methods: {
     callAddPostFromParent(newPost) {

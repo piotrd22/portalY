@@ -1,45 +1,46 @@
 <template>
   <router-link
+    v-if="post"
     :to="`/post/${post._id}`"
     :key="`/post/${post._id}`"
     class="post-link"
   >
     <div :class="getPostClasses">
-      <router-link
-        v-if="post.user"
-        :to="`/profile/${post.user._id}`"
-        class="user-info"
-      >
-        <v-avatar :size="40">
-          <img
-            v-if="post.user.avatar"
-            :src="post.user.avatar"
-            alt="User Avatar"
-            class="avatar-image"
-          />
-          <img
-            v-else
-            src="../assets/default-avatar.jpg"
-            alt="Default Avatar"
-            class="avatar-image"
-          />
-        </v-avatar>
-        <span v-if="post.user.username" class="username">
-          @{{ post.user.username }}
-        </span>
-        <span v-else class="username"> [bug] </span>
-      </router-link>
+      <div v-if="post.user">
+        <router-link :to="`/profile/${post.user._id}`" class="user-info">
+          <v-avatar :size="40">
+            <img
+              v-if="post.user.avatar"
+              :src="post.user.avatar"
+              alt="User Avatar"
+              class="avatar-image"
+            />
+            <img
+              v-else
+              src="../assets/default-avatar.jpg"
+              alt="Default Avatar"
+              class="avatar-image"
+            />
+          </v-avatar>
+          <span v-if="post.user.username" class="username">
+            @{{ post.user.username }}
+          </span>
+          <span v-else class="username"> [bug] </span>
+        </router-link>
+      </div>
 
-      <router-link v-else class="user-info">
-        <v-avatar :size="40">
-          <img
-            src="../assets/default-avatar.jpg"
-            alt="Default Avatar"
-            class="avatar-image"
-          />
-        </v-avatar>
-        <span class="username"> [deleted] </span>
-      </router-link>
+      <div v-else>
+        <div class="user-info">
+          <v-avatar :size="40">
+            <img
+              src="../assets/default-avatar.jpg"
+              alt="Default Avatar"
+              class="avatar-image"
+            />
+          </v-avatar>
+          <span class="username"> [deleted] </span>
+        </div>
+      </div>
 
       <div class="content">{{ post.content }}</div>
 
@@ -73,6 +74,18 @@
               @{{ post.quotedPost.user.username }}
             </span>
           </router-link>
+
+          <div v-else>
+            <v-avatar :size="30">
+              <img
+                src="../assets/default-avatar.jpg"
+                alt="Default Avatar"
+                class="avatar-image"
+              />
+            </v-avatar>
+            <span class="username"> [deleted] </span>
+          </div>
+
           <div class="quoted-content">{{ post.quotedPost.content }}</div>
         </div>
       </router-link>
@@ -167,6 +180,7 @@
             <span v-if="post.user.username" class="username">
               @{{ post.user.username }}
             </span>
+            <span v-else class="username"> [deleted] </span>
           </div>
           <p>{{ post.content }}</p>
         </div>
@@ -251,6 +265,9 @@ export default {
   },
   computed: {
     getPostClasses() {
+      // if (!this.post.user) {
+      //   this.post.user = {}
+      // }
       if (this.isMain) {
         return "main-post";
       } else if (this.isParent) {
@@ -352,7 +369,7 @@ export default {
         this.replyPostContent = "";
         this.addPostToThreadSocket();
         if (this.replyToPostFromParent) {
-          this.replyToPostFromParent();
+          this.replyToPostFromParent(response.data.post);
         }
       } catch (err) {
         console.error("createReply() Post.vue error:", err);

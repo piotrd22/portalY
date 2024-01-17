@@ -71,7 +71,17 @@ export default {
     const uri = `/users/${id}/replies?page=${page}&pageSize=${pageSize}`;
     return apiClient.get(uri, { withCredentials: true });
   },
-  updateAvatar(id, file) {},
+  updateAvatar(id, file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    const uri = `/users/${id}/avatar`;
+    return apiClient.post(uri, formData, {
+      withCredentials: true,
+      headers: {
+        "Content-Type": "multipar/form-data",
+      },
+    });
+  },
   deleteAvatar(id) {
     const uri = `/users/${id}/avatar`;
     return apiClient.delete(uri, { withCredentials: true });

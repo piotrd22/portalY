@@ -19,6 +19,7 @@
       :addPostFromParent="quotePostFromParent"
       :updatePostFromParent="updateMainPostFromParent"
       :deletePostFromParent="deleteMainPostFromParent"
+      :replyToPostFromParent="addRepliesPostFromParent"
     />
 
     <reply-post-form

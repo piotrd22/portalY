@@ -69,6 +69,14 @@
               <span>{{ followingLength }} Following</span>
             </router-link>
           </div>
+          <div v-if="id === loggedInUserId && user.blockedUsers.length > 0">
+            <router-link
+              :to="'/profile/' + id + '/blocked'"
+              class="router-link"
+            >
+              <span>{{ user.blockedUsers.length }} Blocked users</span>
+            </router-link>
+          </div>
         </div>
 
         <div class="bio-container" v-if="user.bio">
@@ -187,7 +195,7 @@ export default {
           this.blockedBy = err.response.data?.blockedBy;
           this.blockedMessage = err.response.data?.message;
         } else {
-          console.error("getUserById() Profile.vue error:", err);
+          console.error("getUserById() Profile.vue error: ", err);
         }
       }
     },
