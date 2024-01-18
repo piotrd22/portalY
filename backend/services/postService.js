@@ -31,9 +31,12 @@ const getPostById = async (id) => {
   return await Post.findById(id);
 };
 
-const getPostReplies = async (id, currentUser, page = 1, pageSize = 10) => {
-  const skip = (parseInt(page) - 1) * parseInt(pageSize);
-
+const getPostReplies = async (
+  id,
+  currentUser,
+  lastCreatedAt,
+  pageSize = 10
+) => {
   return await Post.findById(id).populate({
     path: "replies",
     match: {
@@ -41,19 +44,22 @@ const getPostReplies = async (id, currentUser, page = 1, pageSize = 10) => {
       user: {
         $nin: [...currentUser.blockedUsers, ...currentUser.blockedBy],
       },
+      createdAt: { $lt: new Date(lastCreatedAt) },
     },
     populate: { path: "user", select: "avatar username _id" },
     options: {
       sort: { createdAt: -1 },
-      skip,
       limit: parseInt(pageSize),
     },
   });
 };
 
-const getPostQuotedBy = async (id, currentUser, page = 1, pageSize = 10) => {
-  const skip = (parseInt(page) - 1) * parseInt(pageSize);
-
+const getPostQuotedBy = async (
+  id,
+  currentUser,
+  lastCreatedAt,
+  pageSize = 10
+) => {
   return await Post.findById(id).populate({
     path: "quotedBy",
     match: {
@@ -61,6 +67,7 @@ const getPostQuotedBy = async (id, currentUser, page = 1, pageSize = 10) => {
       user: {
         $nin: [...currentUser.blockedUsers, ...currentUser.blockedBy],
       },
+      createdAt: { $lt: new Date(lastCreatedAt) },
     },
     populate: [
       { path: "user", select: "avatar username _id" },
@@ -71,7 +78,6 @@ const getPostQuotedBy = async (id, currentUser, page = 1, pageSize = 10) => {
     ],
     options: {
       sort: { createdAt: -1 },
-      skip,
       limit: parseInt(pageSize),
     },
   });
@@ -142,17 +148,16 @@ const updatePost = async (post, dataToUpdate) => {
   });
 };
 
-const getFeed = async (currentUser, page = 1, pageSize = 10) => {
-  const skip = (parseInt(page) - 1) * parseInt(pageSize);
-
-  return await Post.find({
+const getFeed = async (currentUser, lastCreatedAt, pageSize = 10) => {
+  const query = {
     $or: [{ user: { $in: currentUser.following } }, { user: currentUser._id }],
     isDeleted: { $ne: true },
-    user: {
-      $nin: [...currentUser.blockedUsers, ...currentUser.blockedBy],
-    },
+    user: { $nin: [...currentUser.blockedUsers, ...currentUser.blockedBy] },
     parents: { $size: 0 },
-  })
+    createdAt: { $lt: new Date(lastCreatedAt) },
+  };
+
+  return await Post.find(query)
     .populate({
       path: "user",
       select: "avatar username _id",
@@ -163,7 +168,6 @@ const getFeed = async (currentUser, page = 1, pageSize = 10) => {
       populate: { path: "user", select: "avatar username _id" },
     })
     .sort({ createdAt: -1 })
-    .skip(skip)
     .limit(parseInt(pageSize));
 };
 

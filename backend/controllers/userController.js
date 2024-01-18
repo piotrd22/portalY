@@ -205,9 +205,17 @@ const unblockUser = async (req, res) => {
 
 const searchUsers = async (req, res) => {
   try {
-    const { keyword, page = 1, pageSize = 10 } = req.query;
+    const {
+      keyword,
+      lastCreatedAt = new Date().toISOString(),
+      pageSize = 10,
+    } = req.query;
 
-    const users = await userService.searchUsers(keyword, page, pageSize);
+    const users = await userService.searchUsers(
+      keyword,
+      lastCreatedAt,
+      pageSize
+    );
 
     const usersToReturn = users.map((user) => userMapper(user));
 
@@ -223,12 +231,13 @@ const searchUsers = async (req, res) => {
 const getUserFollowers = async (req, res) => {
   try {
     const { id } = req.params;
-    const { page = 1, pageSize = 10 } = req.query;
+    const { lastCreatedAt = new Date().toISOString(), pageSize = 10 } =
+      req.query;
 
     const user = await userService.getUserAndPopulate(
       id,
       "followers",
-      page,
+      lastCreatedAt,
       pageSize
     );
 
@@ -250,12 +259,13 @@ const getUserFollowers = async (req, res) => {
 const getUserFollowings = async (req, res) => {
   try {
     const { id } = req.params;
-    const { page = 1, pageSize = 10 } = req.query;
+    const { lastCreatedAt = new Date().toISOString(), pageSize = 10 } =
+      req.query;
 
     const user = await userService.getUserAndPopulate(
       id,
       "following",
-      page,
+      lastCreatedAt,
       pageSize
     );
 
@@ -277,12 +287,13 @@ const getUserFollowings = async (req, res) => {
 const getBlockedUsers = async (req, res) => {
   try {
     const { id } = req.params;
-    const { page = 1, pageSize = 10 } = req.query;
+    const { lastCreatedAt = new Date().toISOString(), pageSize = 10 } =
+      req.query;
 
     const user = await userService.getUserAndPopulate(
       id,
       "blockedUsers",
-      page,
+      lastCreatedAt,
       pageSize
     );
 
@@ -378,9 +389,14 @@ const updateUser = async (req, res) => {
 const getUserPosts = async (req, res) => {
   try {
     const { id } = req.params;
-    const { page = 1, pageSize = 10 } = req.query;
+    const { lastCreatedAt = new Date().toISOString(), pageSize = 10 } =
+      req.query;
 
-    const userWithPosts = await userService.getUserPosts(id, page, pageSize);
+    const userWithPosts = await userService.getUserPosts(
+      id,
+      lastCreatedAt,
+      pageSize
+    );
 
     if (!userWithPosts) {
       return res.status(status.NOT_FOUND).json({ message: "User not found" });
@@ -423,11 +439,12 @@ const getUserPosts = async (req, res) => {
 const getUserReplies = async (req, res) => {
   try {
     const { id } = req.params;
-    const { page = 1, pageSize = 10 } = req.query;
+    const { lastCreatedAt = new Date().toISOString(), pageSize = 10 } =
+      req.query;
 
     const userWithReplies = await userService.getUserReplies(
       id,
-      page,
+      lastCreatedAt,
       pageSize
     );
 

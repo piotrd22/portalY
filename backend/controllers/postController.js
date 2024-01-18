@@ -99,9 +99,15 @@ const getPostById = async (req, res) => {
 const getPostReplies = async (req, res) => {
   try {
     const { id } = req.params;
-    const { page = 1, pageSize = 10 } = req.query;
+    const { lastCreatedAt = new Date(0).toISOString(), pageSize = 10 } =
+      req.query;
 
-    const post = await postService.getPostReplies(id, req.user, page, pageSize);
+    const post = await postService.getPostReplies(
+      id,
+      req.user,
+      lastCreatedAt,
+      pageSize
+    );
 
     if (!post) {
       return res.status(status.NOT_FOUND).json({ message: "Post not found" });
@@ -119,12 +125,13 @@ const getPostReplies = async (req, res) => {
 const getPostQuotedBy = async (req, res) => {
   try {
     const { id } = req.params;
-    const { page = 1, pageSize = 10 } = req.query;
+    const { lastCreatedAt = new Date().toISOString(), pageSize = 10 } =
+      req.query;
 
     const post = await postService.getPostQuotedBy(
       id,
       req.user,
-      page,
+      lastCreatedAt,
       pageSize
     );
 
@@ -301,9 +308,10 @@ const updatePost = async (req, res) => {
 
 const getFeed = async (req, res) => {
   try {
-    const { page = 1, pageSize = 10 } = req.query;
+    const { pageSize = 10, lastCreatedAt = new Date().toISOString() } =
+      req.query;
 
-    const posts = await postService.getFeed(req.user, page, pageSize);
+    const posts = await postService.getFeed(req.user, lastCreatedAt, pageSize);
 
     posts.forEach((post) => {
       if (post.quotedPost && post.quotedPost.isDeleted) {

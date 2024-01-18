@@ -82,25 +82,27 @@ const unblockUser = async (user, userToUnblock) => {
   await userToUnblock.updateOne({ $pull: { blockedBy: user.id } });
 };
 
-const searchUsers = async (keyword, page = 1, pageSize = 10) => {
-  const skip = (parseInt(page) - 1) * parseInt(pageSize);
-
-  return await User.find({
+const searchUsers = async (keyword, lastCreatedAt, pageSize = 10) => {
+  const query = {
     $or: [
       { username: { $regex: new RegExp(keyword, "i") } },
       { name: { $regex: new RegExp(keyword, "i") } },
     ],
-  })
+    createdAt: { $lt: new Date(lastCreatedAt) },
+  };
+
+  return await User.find(query)
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(parseInt(pageSize));
 };
 
-const getUserAndPopulate = async (id, path, page = 1, pageSize = 10) => {
-  const skip = (parseInt(page) - 1) * parseInt(pageSize);
-
+const getUserAndPopulate = async (id, path, lastCreatedAt, pageSize = 10) => {
   return await User.findById(id).populate({
     path: path,
+    match: {
+      createdAt: { $lt: new Date(lastCreatedAt) },
+    },
     options: {
       sort: { createdAt: -1 },
       skip,
@@ -115,14 +117,14 @@ const updateUser = async (id, dataToUpdate) => {
   });
 };
 
-const getUserPosts = async (id, page = 1, pageSize = 10) => {
-  const skip = (parseInt(page) - 1) * parseInt(pageSize);
-
+const getUserPosts = async (id, lastCreatedAt, pageSize = 10) => {
   return await User.findById(id).populate({
     path: "posts",
+    match: {
+      createdAt: { $lt: new Date(lastCreatedAt) },
+    },
     options: {
       sort: { createdAt: -1 },
-      skip,
       limit: parseInt(pageSize),
     },
     populate: [
@@ -142,14 +144,14 @@ const getUserPosts = async (id, page = 1, pageSize = 10) => {
   });
 };
 
-const getUserReplies = async (id, page = 1, pageSize = 10) => {
-  const skip = (parseInt(page) - 1) * parseInt(pageSize);
-
+const getUserReplies = async (id, lastCreatedAt, pageSize = 10) => {
   return await User.findById(id).populate({
     path: "replies",
+    match: {
+      createdAt: { $lt: new Date(lastCreatedAt) },
+    },
     options: {
       sort: { createdAt: -1 },
-      skip,
       limit: parseInt(pageSize),
     },
     populate: [
