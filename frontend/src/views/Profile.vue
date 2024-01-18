@@ -161,9 +161,9 @@ export default {
       isFollowedUser: false,
       tab: null,
       posts: [],
-      postsPage: 1,
+      postsLastCreatedAt: null,
       replies: [],
-      repliesPage: 1,
+      repliesLastCreatedAt: null,
       isBlocked: false,
       blockedBy: false,
       blockedMessage: "",
@@ -171,8 +171,10 @@ export default {
   },
   watch: {
     async $route() {
-      this.postsPage = 1;
+      this.postsLastCreatedAt = null;
       this.posts = [];
+      this.replies = [];
+      this.repliesLastCreatedAt = null;
       await this.getUserById();
       window.scrollTo(0, 0);
     },
@@ -261,13 +263,13 @@ export default {
       try {
         const response = await userService.getUserPosts(
           this.id,
-          this.postsPage
+          this.postsLastCreatedAt
         );
         if (response.data.posts.length === 0) {
           return done("empty");
         }
         this.posts.push(...response.data.posts);
-        this.postsPage++;
+        this.postsLastCreatedAt = this.posts[this.posts.length - 1].createdAt;
         done("ok");
       } catch (err) {
         done("error");
@@ -290,13 +292,14 @@ export default {
       try {
         const response = await userService.getUserReplies(
           this.id,
-          this.repliesPage
+          this.repliesLastCreatedAt
         );
         if (response.data.replies.length === 0) {
           return done("empty");
         }
         this.replies.push(...response.data.replies);
-        this.repliesPage++;
+        this.repliesLastCreatedAt =
+          this.replies[this.replies.length - 1].createdAt;
         done("ok");
       } catch (err) {
         done("error");

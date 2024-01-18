@@ -265,9 +265,6 @@ export default {
   },
   computed: {
     getPostClasses() {
-      // if (!this.post.user) {
-      //   this.post.user = {}
-      // }
       if (this.isMain) {
         return "main-post";
       } else if (this.isParent) {
@@ -282,8 +279,8 @@ export default {
       return new Date(date).toLocaleString();
     },
     isThisUserPost(post) {
-      const userId = JSON.parse(localStorage.getItem("userId"));
-      return post.user && userId && post.user._id === userId;
+      const user = JSON.parse(localStorage.getItem("user"));
+      return post.user && user._id && post.user._id === user._id;
     },
     openUpdatePostDialog() {
       this.updatePostDialog = true;

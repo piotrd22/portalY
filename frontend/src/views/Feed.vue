@@ -24,21 +24,18 @@ export default {
     return {
       user: null,
       feed: [],
-      page: 1,
+      lastCreatedAt: null,
     };
   },
   methods: {
-    async fetchFeed(page) {
-      return await postService.getFeed(page);
-    },
     async loadMore({ done }) {
       try {
-        const response = await postService.getFeed(this.page);
+        const response = await postService.getFeed(this.lastCreatedAt);
         if (response.data.posts.length === 0) {
           return done("empty");
         }
         this.feed.push(...response.data.posts);
-        this.page++;
+        this.lastCreatedAt = this.feed[this.feed.length - 1].createdAt;
         done("ok");
       } catch (err) {
         done("error");

@@ -27,18 +27,21 @@ export default {
   data() {
     return {
       quotes: [],
-      page: 1,
+      lastCreatedAt: null,
     };
   },
   methods: {
     async loadMoreQuotes({ done }) {
       try {
-        const response = await postService.getPostQuotedBy(this.id, this.page);
+        const response = await postService.getPostQuotedBy(
+          this.id,
+          this.lastCreatedAt
+        );
         if (response.data.quotedBy.length === 0) {
           return done("empty");
         }
         this.quotes.push(...response.data.quotedBy);
-        this.page++;
+        this.lastCreatedAt = this.quotes[this.quotes.length - 1].createdAt;
         done("ok");
       } catch (error) {
         done("error");

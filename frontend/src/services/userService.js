@@ -28,20 +28,28 @@ export default {
     const uri = `/users/${id}/unblock`;
     return apiClient.patch(uri, {}, { withCredentials: true });
   },
-  searchUsers(keyword, page = 1, pageSize = 10) {
-    const uri = `/users/search?keyword=${keyword}&page=${page}&pageSize=${pageSize}`;
+  searchUsers(keyword, lastCreatedAt, pageSize = 10) {
+    const uri = `/users/search?keyword=${keyword}&lastCreatedAt=${
+      lastCreatedAt || new Date().toISOString()
+    }&pageSize=${pageSize}`;
     return apiClient.get(uri, { withCredentials: true });
   },
-  getUserFollowers(id, page = 1, pageSize = 10) {
-    const uri = `/users/${id}/followers?page=${page}&pageSize=${pageSize}`;
+  getUserFollowers(id, lastCreatedAt, pageSize = 10) {
+    const uri = `/users/${id}/followers?lastCreatedAt=${
+      lastCreatedAt || new Date().toISOString()
+    }&pageSize=${pageSize}`;
     return apiClient.get(uri, { withCredentials: true });
   },
-  getUserFollowings(id, page = 1, pageSize = 10) {
-    const uri = `/users/${id}/followings?page=${page}&pageSize=${pageSize}`;
+  getUserFollowings(id, lastCreatedAt, pageSize = 10) {
+    const uri = `/users/${id}/followings?lastCreatedAt=${
+      lastCreatedAt || new Date().toISOString()
+    }&pageSize=${pageSize}`;
     return apiClient.get(uri, { withCredentials: true });
   },
-  getBlockedUsers(id, page = 1, pageSize = 10) {
-    const uri = `/users/${id}/blocked?page=${page}&pageSize=${pageSize}`;
+  getBlockedUsers(id, lastCreatedAt, pageSize = 10) {
+    const uri = `/users/${id}/blocked?lastCreatedAt=${
+      lastCreatedAt || new Date().toISOString()
+    }&pageSize=${pageSize}`;
     return apiClient.get(uri, { withCredentials: true });
   },
   updatePassword(id, password, oldPassword) {
@@ -63,12 +71,16 @@ export default {
     const uri = `/users/${id}`;
     return apiClient.patch(uri, body, { withCredentials: true });
   },
-  getUserPosts(id, page = 1, pageSize = 10) {
-    const uri = `/users/${id}/posts?page=${page}&pageSize=${pageSize}`;
+  getUserPosts(id, lastCreatedAt, pageSize = 10) {
+    const uri = `/users/${id}/posts?lastCreatedAt=${
+      lastCreatedAt || new Date().toISOString()
+    }&pageSize=${pageSize}`;
     return apiClient.get(uri, { withCredentials: true });
   },
-  getUserReplies(id, page = 1, pageSize = 10) {
-    const uri = `/users/${id}/replies?page=${page}&pageSize=${pageSize}`;
+  getUserReplies(id, lastCreatedAt, pageSize = 10) {
+    const uri = `/users/${id}/replies?lastCreatedAt=${
+      lastCreatedAt || new Date().toISOString()
+    }&pageSize=${pageSize}`;
     return apiClient.get(uri, { withCredentials: true });
   },
   updateAvatar(id, file) {

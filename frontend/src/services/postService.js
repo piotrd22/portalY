@@ -1,8 +1,10 @@
 import apiClient from "./apiClient";
 
 export default {
-  getFeed(page = 1, pageSize = 10) {
-    const uri = `post/feed?page=${page}&pageSize=${pageSize}`;
+  getFeed(lastCreatedAt, pageSize = 10) {
+    const uri = `post/feed?lastCreatedAt=${
+      lastCreatedAt || new Date().toISOString()
+    }&pageSize=${pageSize}`;
     return apiClient.get(uri, { withCredentials: true });
   },
   createPost(post) {
@@ -34,12 +36,16 @@ export default {
     const uri = `/post/${id}`;
     return apiClient.get(uri, { withCredentials: true });
   },
-  getPostReplies(id, page) {
-    const uri = `/post/${id}/replies?page=${page}`;
+  getPostReplies(id, lastCreatedAt, pageSize = 10) {
+    const uri = `/post/${id}/replies?lastCreatedAt=${
+      lastCreatedAt || new Date().toISOString()
+    }&pageSize=${pageSize}`;
     return apiClient.get(uri, { withCredentials: true });
   },
-  getPostQuotedBy(id, page) {
-    const uri = `/post/${id}/quoted?page=${page}`;
+  getPostQuotedBy(id, lastCreatedAt, pageSize = 10) {
+    const uri = `/post/${id}/quoted?lastCreatedAt=${
+      lastCreatedAt || new Date().toISOString()
+    }&pageSize=${pageSize}`;
     return apiClient.get(uri, { withCredentials: true });
   },
 };

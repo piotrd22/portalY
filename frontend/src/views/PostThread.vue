@@ -60,7 +60,7 @@ export default {
       parents: [],
       replies: [],
       post: null,
-      page: 1,
+      lastCreatedAt: null,
       room: "",
       timeoutId: null,
     };
@@ -68,7 +68,7 @@ export default {
   watch: {
     async $route() {
       this.leaveRoom();
-      this.page = 1;
+      this.lastCreatedAt = null;
       this.replies = [];
       await this.fetchPost();
       if (window.scrollY === 0) {
@@ -117,22 +117,28 @@ export default {
     },
     async fetchReplies() {
       try {
-        const response = await postService.getPostReplies(this.id, this.page);
+        const response = await postService.getPostReplies(
+          this.id,
+          this.lastCreatedAt
+        );
         this.replies = response.data.replies;
-        this.page++;
+        this.lastCreatedAt = this.replies[this.replies.length - 1].createdAt;
       } catch (error) {
         console.error("Error fetching replies data:", error);
       }
     },
     async loadMoreReplies({ done }) {
       try {
-        const response = await postService.getPostReplies(this.id, this.page);
+        const response = await postService.getPostReplies(
+          this.id,
+          this.lastCreatedAt
+        );
         if (response.data.replies.length === 0) {
           return done("empty");
         }
 
         this.replies.push(...response.data.replies);
-        this.page++;
+        this.lastCreatedAt = this.replies[this.replies.length - 1].createdAt;
         done("ok");
       } catch (error) {
         done("error");
