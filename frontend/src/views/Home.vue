@@ -46,9 +46,7 @@
               type="password"
               :rules="[(v) => !!v || 'This field is required']"
             ></v-text-field>
-            <v-btn type="submit" color="primary" @click="register"
-              >Register</v-btn
-            >
+            <v-btn type="submit" color="primary">Register</v-btn>
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -80,7 +78,7 @@
               type="password"
               :rules="[(v) => !!v || 'This field is required']"
             ></v-text-field>
-            <v-btn type="submit" color="primary" @click="login">Log in</v-btn>
+            <v-btn type="submit" color="primary">Log in</v-btn>
           </v-form>
         </v-card-text>
         <v-card-actions>

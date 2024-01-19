@@ -53,17 +53,14 @@
 
         <div class="icon-info">
           <div>
-            <router-link
-              :to="'/profile/' + id + '/followers'"
-              class="router-link"
-            >
+            <router-link :to="'/profile/' + id + '/follow'" class="router-link">
               <span>{{ followersLength }} Followers</span>
             </router-link>
           </div>
 
           <div>
             <router-link
-              :to="'/profile/' + id + '/following'"
+              :to="'/profile/' + id + '/follow?following=true'"
               class="router-link"
             >
               <span>{{ followingLength }} Following</span>
@@ -175,6 +172,7 @@ export default {
       this.posts = [];
       this.replies = [];
       this.repliesLastCreatedAt = null;
+      this.isBlocked = false;
       await this.getUserById();
       window.scrollTo(0, 0);
     },

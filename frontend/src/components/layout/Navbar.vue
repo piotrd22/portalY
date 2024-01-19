@@ -9,6 +9,19 @@
       </v-btn>
     </v-toolbar-title>
 
+    <v-text-field
+      v-if="isLoggedIn && user.username"
+      class="narrow-text-field"
+      density="compact"
+      variant="solo"
+      label="Search"
+      append-inner-icon="mdi-magnify"
+      single-line
+      hide-details
+      @click:append-inner="searchUsers"
+      v-model="searchKeyword"
+    ></v-text-field>
+
     <v-btn v-if="isLoggedIn && user.username" @click="navigateToProfile" text>
       @{{ user.username }}
       <v-avatar size="36" class="avatar">
@@ -39,6 +52,7 @@ export default {
     return {
       isLoggedIn: false,
       user: null,
+      searchKeyword: "",
     };
   },
   mounted() {
@@ -56,13 +70,7 @@ export default {
   },
   computed: {
     isGoBackPage() {
-      return (
-        this.$route.name === "PostThread" ||
-        this.$route.name === "PostQuotedBy" ||
-        this.$route.name === "Profile" ||
-        this.$route.name === "NotFound" ||
-        this.$route.name === "EditProfile"
-      );
+      return this.$route.name !== "Feed" && this.$route.name !== "Home";
     },
   },
   methods: {
@@ -106,6 +114,21 @@ export default {
       const id = this.user._id;
       this.$router.push({ name: "Profile", params: { id } });
     },
+    async searchUsers() {
+      try {
+        let lastCreatedAt = new Date().toISOString();
+        this.$router.push({
+          name: "Search",
+          query: {
+            keyword: this.searchKeyword,
+            lastCreatedAt: lastCreatedAt,
+          },
+        });
+        this.searchKeyword = "";
+      } catch (err) {
+        console.error("searchUsers() Navbar.vue error: ", err);
+      }
+    },
   },
 };
 </script>
@@ -123,5 +146,9 @@ export default {
 }
 .avatar {
   margin-left: 10px;
+}
+
+.narrow-text-field {
+  max-width: 300px;
 }
 </style>

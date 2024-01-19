@@ -5,6 +5,9 @@ import PostThread from "../views/PostThread.vue";
 import PostQuotedBy from "../views/PostQuotedBy.vue";
 import Profile from "../views/Profile.vue";
 import EditProfile from "../views/EditProfile.vue";
+import Search from "../views/Search.vue";
+import Follow from "../views/Follow.vue";
+import Blocked from "../views/Blocked.vue";
 import NotFound from "../views/NotFound.vue";
 
 const routes = [
@@ -30,22 +33,49 @@ const routes = [
     path: "/post/:id/quotes",
     name: "PostQuotedBy",
     component: PostQuotedBy,
-    props: true, // Passes id as a property of the component
+    props: true,
     meta: { requiresAuth: true },
   },
   {
     path: "/profile/:id",
     name: "Profile",
     component: Profile,
-    props: true, // Passes id as a property of the component
+    props: true,
     meta: { requiresAuth: true },
   },
   {
     path: "/profile/:id/edit",
     name: "EditProfile",
     component: EditProfile,
-    props: true, // Passes id as a property of the component
+    props: true,
     meta: { requireMe: true },
+  },
+  {
+    path: "/profile/:id/blocked",
+    name: "Blocked",
+    component: Blocked,
+    props: true,
+    meta: { requireMe: true },
+  },
+  {
+    path: "/profile/:id/follow",
+    name: "Follow",
+    component: Follow,
+    props: (route) => ({
+      id: route.params.id,
+      following: route.query.following,
+    }),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/search",
+    name: "Search",
+    component: Search,
+    meta: { requiresAuth: true },
+    props: (route) => ({
+      keyword: route.query.keyword,
+      lastCreatedAt: route.query.lastCreatedAt,
+    }),
   },
   { path: "/:pathMatch(.*)*", name: "NotFound", component: NotFound },
 ];
