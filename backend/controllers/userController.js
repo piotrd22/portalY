@@ -213,6 +213,7 @@ const searchUsers = async (req, res) => {
 
     const users = await userService.searchUsers(
       keyword,
+      req.user._id,
       lastCreatedAt,
       pageSize
     );

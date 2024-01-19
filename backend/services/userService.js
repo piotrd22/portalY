@@ -82,18 +82,23 @@ const unblockUser = async (user, userToUnblock) => {
   await userToUnblock.updateOne({ $pull: { blockedBy: user.id } });
 };
 
-const searchUsers = async (keyword, lastCreatedAt, pageSize = 10) => {
+const searchUsers = async (
+  keyword,
+  loggedInUserId,
+  lastCreatedAt,
+  pageSize = 10
+) => {
   const query = {
     $or: [
       { username: { $regex: new RegExp(keyword, "i") } },
       { name: { $regex: new RegExp(keyword, "i") } },
     ],
     createdAt: { $lt: new Date(lastCreatedAt) },
+    _id: { $ne: loggedInUserId },
   };
 
   return await User.find(query)
     .sort({ createdAt: -1 })
-    .skip(skip)
     .limit(parseInt(pageSize));
 };
 
@@ -105,7 +110,6 @@ const getUserAndPopulate = async (id, path, lastCreatedAt, pageSize = 10) => {
     },
     options: {
       sort: { createdAt: -1 },
-      skip,
       limit: parseInt(pageSize),
     },
   });
