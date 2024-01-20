@@ -58,7 +58,7 @@ export default {
       }
     },
     deleteQuotesPostFromParent(id) {
-      this.quotes = this.feed.filter((post) => post._id !== id);
+      this.quotes = this.quotes.filter((post) => post._id !== id);
     },
   },
   components: {

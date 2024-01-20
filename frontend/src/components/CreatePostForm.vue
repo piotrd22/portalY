@@ -1,5 +1,5 @@
 <template>
-  <v-form @submit.prevent="createPost">
+  <v-form ref="createPostForm" @submit.prevent="createPost">
     <div class="custom-form">
       <v-textarea
         v-model="newPostContent"
@@ -7,6 +7,7 @@
         required
         rows="3"
         :auto-grow="false"
+        :rules="createPostRules"
         class="custom-textarea"
       ></v-textarea>
 
@@ -27,17 +28,28 @@ export default {
   methods: {
     async createPost() {
       try {
-        const response = await postService.createPost({
-          content: this.newPostContent,
-        });
-        this.newPostContent = "";
-        this.addPostFromParent(response.data.post);
-        this.$toast.success("Post successfully added!");
+        const validationResult = await this.$refs.createPostForm.validate();
+        if (validationResult.valid) {
+          const response = await postService.createPost({
+            content: this.newPostContent,
+          });
+          this.$refs.createPostForm.reset();
+          this.addPostFromParent(response.data.post);
+          this.$toast.success("Post successfully added!");
+        }
       } catch (err) {
         console.error("createPost() Form.vue error:", err);
         const errorMessage = err.response.data.message || "Added post failed.";
         this.$toast.error(errorMessage);
       }
+    },
+  },
+  computed: {
+    createPostRules() {
+      return [
+        (value) => !!value || "Content is required",
+        (value) => !/^\s+$/.test(value) || "Content cannot be only whitespace",
+      ];
     },
   },
   props: {

@@ -1,5 +1,5 @@
 <template>
-  <v-form @submit.prevent="createReply">
+  <v-form ref="createReplyForm" @submit.prevent="createReply">
     <div class="custom-form">
       <v-textarea
         v-model="newReply"
@@ -7,6 +7,7 @@
         required
         rows="3"
         :auto-grow="false"
+        :rules="createReplyRules"
         class="custom-textarea"
       ></v-textarea>
 
@@ -27,19 +28,30 @@ export default {
   methods: {
     async createReply() {
       try {
-        const response = await postService.createReply(
-          this.newReply,
-          this.postId
-        );
-        this.newReply = "";
-        this.addPostFromParent(response.data.post);
-        this.addPostToThreadSocket();
-        this.$toast.success("Reply successfully added!");
+        const validationResult = await this.$refs.createReplyForm.validate();
+        if (validationResult.valid) {
+          const response = await postService.createReply(
+            this.newReply,
+            this.postId
+          );
+          this.$refs.createReplyForm.reset();
+          this.addPostFromParent(response.data.post);
+          this.addPostToThreadSocket();
+          this.$toast.success("Reply successfully added!");
+        }
       } catch (err) {
         console.error("createReply() ReplyPostForm.vue error:", err);
         const errorMessage = err.response.data.message || "Added post failed.";
         this.$toast.error(errorMessage);
       }
+    },
+  },
+  computed: {
+    createReplyRules() {
+      return [
+        (value) => !!value || "Content is required",
+        (value) => !/^\s+$/.test(value) || "Content cannot be only whitespace",
+      ];
     },
   },
   props: {

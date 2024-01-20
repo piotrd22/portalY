@@ -97,7 +97,7 @@
           <v-icon class="v-icon reply-icon" @click.prevent="openReplyPostDialog"
             >mdi-comment-multiple</v-icon
           >
-          <span>{{ post.replies.length }}</span>
+          <span>{{ repliesLength }}</span>
           <v-icon class="v-icon quote-icon" @click.prevent="openQuotePostDialog"
             >mdi-format-quote-close</v-icon
           >
@@ -160,7 +160,10 @@
     <v-card>
       <v-card-title> Quote Post </v-card-title>
       <v-card-text>
-        <v-text-field v-model="quotePostContent"></v-text-field>
+        <v-text-field
+          v-model="quotePostContent"
+          :rules="createQuoteRules"
+        ></v-text-field>
         <div>
           <div class="user-info">
             <v-avatar :size="40">
@@ -203,7 +206,10 @@
     <v-card>
       <v-card-title>Reply</v-card-title>
       <v-card-text>
-        <v-text-field v-model="replyPostContent"></v-text-field>
+        <v-text-field
+          v-model="replyPostContent"
+          :rules="createReplyRules"
+        ></v-text-field>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
@@ -234,6 +240,7 @@ export default {
       quotedLength: this.post.quotedBy.length,
       replyPostDialog: false,
       replyPostContent: "",
+      repliesLength: this.post.replies.length,
     };
   },
   props: {
@@ -272,6 +279,29 @@ export default {
       } else {
         return "post";
       }
+    },
+    createReplyRules() {
+      return [
+        (value) => !!value || "Content is required",
+        (value) => !/^\s+$/.test(value) || "Content cannot be only whitespace",
+      ];
+    },
+    isReplyValid() {
+      const hasErrors = this.createReplyRules.some(
+        (rule) => rule(this.replyPostContent) !== true
+      );
+      return !hasErrors;
+    },
+    createQuoteRules() {
+      return [
+        (value) => !/^\s+$/.test(value) || "Content cannot be only whitespace",
+      ];
+    },
+    isQuoteValid() {
+      const hasErrors = this.createQuoteRules.some(
+        (rule) => rule(this.quotePostContent) !== true
+      );
+      return !hasErrors;
     },
   },
   methods: {
@@ -332,15 +362,17 @@ export default {
     },
     async quotePost() {
       try {
-        const response = await postService.createQuote(
-          this.quotePostContent,
-          this.post._id
-        );
-        this.closeQuotePostDialog();
-        this.$toast.success("Post successfully quoted!");
-        this.quotedLength++;
-        this.quotePostContent = "";
-        this.addPostFromParent(response.data.post);
+        if (this.isQuoteValid) {
+          const response = await postService.createQuote(
+            this.quotePostContent,
+            this.post._id
+          );
+          this.closeQuotePostDialog();
+          this.$toast.success("Post successfully quoted!");
+          this.quotedLength++;
+          this.quotePostContent = "";
+          this.addPostFromParent(response.data.post);
+        }
       } catch (err) {
         console.error("quotePost() Post.vue error:", err);
         const errorMessage =
@@ -356,17 +388,19 @@ export default {
     },
     async createReply() {
       try {
-        const response = await postService.createReply(
-          this.replyPostContent,
-          this.post._id
-        );
-        this.closeReplyPostDialog();
-        this.$toast.success("Reply successfully added!");
-        this.post.replies.push(response.data.post);
-        this.replyPostContent = "";
-        this.addPostToThreadSocket();
-        if (this.replyToPostFromParent) {
-          this.replyToPostFromParent(response.data.post);
+        if (this.isReplyValid) {
+          const response = await postService.createReply(
+            this.replyPostContent,
+            this.post._id
+          );
+          this.closeReplyPostDialog();
+          this.$toast.success("Reply successfully added!");
+          this.replyPostContent = "";
+          this.repliesLength++;
+          this.addPostToThreadSocket();
+          if (this.replyToPostFromParent) {
+            this.replyToPostFromParent(response.data.post);
+          }
         }
       } catch (err) {
         console.error("createReply() Post.vue error:", err);
