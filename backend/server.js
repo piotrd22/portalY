@@ -2,6 +2,7 @@ const express = require("express");
 const https = require("https");
 const helmet = require("helmet");
 const fs = require("fs");
+const path = require("path");
 const cors = require("cors");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
@@ -38,6 +39,15 @@ app.use(cookieParser());
 app.use(sessionMiddleware);
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(
+  helmet.contentSecurityPolicy({
+    useDefaults: true,
+    directives: {
+      "script-src": ["'self'", "'unsafe-inline'"],
+      "img-src": ["'self'", "https://ik.imagekit.io/piotr/", "data:"],
+    },
+  })
+);
 
 // Routes configuration
 const authRoutes = require("./routes/authRoutes");
@@ -48,7 +58,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/post", postRoutes);
 
-// WebSockets
+// Socket.io
 const sio = require("socket.io")(server, {
   cors: corsOptions,
   transports: ["websocket"],
@@ -70,6 +80,13 @@ sio.use((socket, next) => {
 
 const socketServer = require("./socket/socketServer.js");
 socketServer(sio);
+
+// Host static frontend
+app.use(express.static(path.join(__dirname, "../frontend/dist")));
+
+app.get(/^\/(?!api).*/, (_, res) => {
+  res.sendFile(path.join(__dirname, "../", "frontend", "dist", "index.html"));
+});
 
 // Application startup
 const start = async () => {
