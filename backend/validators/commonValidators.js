@@ -40,4 +40,28 @@ const validateMongoId = (id, idName) => {
   return null;
 };
 
-module.exports = { createValidator, validateNotEmpty, validateMongoId };
+const validateNotWhitespace = (value, valueName) => {
+  if (/^\s+$/.test(value)) {
+    return valueName
+      ? `${valueName} cannot consist of only whitespace`
+      : "Value cannot consist of only whitespace";
+  }
+  return null;
+};
+
+const validateHasWhitespace = (value, valueName) => {
+  if (/\s/.test(value)) {
+    return valueName
+      ? `${valueName} cannot contain whitespace`
+      : "Value cannot contain whitespace";
+  }
+  return null;
+};
+
+module.exports = {
+  createValidator,
+  validateNotEmpty,
+  validateMongoId,
+  validateNotWhitespace,
+  validateHasWhitespace,
+};
