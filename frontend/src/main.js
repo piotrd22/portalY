@@ -39,6 +39,13 @@ const checkIsAuthenticated = async () => {
   }
 };
 
-await checkIsAuthenticated();
+const createAppWithAuthentication = async () => {
+  try {
+    await checkIsAuthenticated();
+    createApp(App).use(vuetify).use(ToastPlugin).use(router).mount("#app");
+  } catch (err) {
+    console.error("createAppWithAuthentication error: ", err);
+  }
+};
 
-createApp(App).use(vuetify).use(ToastPlugin).use(router).mount("#app");
+createAppWithAuthentication();
