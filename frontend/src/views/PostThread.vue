@@ -46,7 +46,7 @@
 import postService from "../services/postService";
 import Post from "../components/Post.vue";
 import ReplyPostForm from "../components/ReplyPostForm.vue";
-import socket from "../socket";
+import { useSocketStore } from "../stores";
 
 export default {
   props: {
@@ -63,6 +63,7 @@ export default {
       lastCreatedAt: null,
       room: "",
       timeoutId: null,
+      socket: useSocketStore().socket,
     };
   },
   watch: {
@@ -80,7 +81,7 @@ export default {
     },
   },
   mounted() {
-    socket.on("newPosts", () => {
+    this.socket.on("newPosts", () => {
       // timeoutId is useful when there are new posts,
       // but we don't want to show messages every time there are new posts,
       // so we wait X seconds to display such a toast
@@ -184,16 +185,16 @@ export default {
     },
     joinRoom() {
       this.room = `/post/${this.id}`;
-      socket.emit("joinRoom", this.room);
+      this.socket.emit("joinRoom", this.room);
     },
     leaveRoom() {
-      socket.emit("leaveRoom", this.room);
+      this.socket.emit("leaveRoom", this.room);
       this.room = "";
       clearTimeout(this.timeoutId);
       this.timeoutId = null;
     },
     addPostToThreadSocket() {
-      socket.emit("newPost", this.room);
+      this.socket.emit("newPost", this.room);
     },
   },
   components: {

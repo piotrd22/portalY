@@ -46,6 +46,7 @@
 
 <script>
 import authService from "../../services/authService";
+import { useSocketStore } from "../../stores";
 
 export default {
   data() {
@@ -53,6 +54,7 @@ export default {
       isLoggedIn: false,
       user: null,
       searchKeyword: "",
+      socketStore: useSocketStore(),
     };
   },
   mounted() {
@@ -95,6 +97,8 @@ export default {
             },
           })
         );
+
+        this.socketStore.disconnectSocket();
 
         this.$router.push({ name: "Home" });
       } catch (err) {

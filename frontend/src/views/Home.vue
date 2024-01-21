@@ -95,6 +95,7 @@
 <script>
 import authService from "../services/authService";
 import userService from "../services/userService";
+import { useSocketStore } from "../stores";
 
 export default {
   data() {
@@ -157,6 +158,8 @@ export default {
               },
             })
           );
+
+          useSocketStore().initializeSocket();
 
           this.$router.push({ name: "Feed" });
         }

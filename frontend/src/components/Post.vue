@@ -227,7 +227,7 @@
 
 <script>
 import postService from "../services/postService";
-import socket from "../socket";
+import { useSocketStore } from "../stores";
 
 export default {
   data() {
@@ -241,6 +241,7 @@ export default {
       replyPostDialog: false,
       replyPostContent: "",
       repliesLength: this.post.replies.length,
+      socket: useSocketStore().socket,
     };
   },
   props: {
@@ -409,7 +410,7 @@ export default {
       }
     },
     addPostToThreadSocket() {
-      socket.emit("newPost", `/post/${this.post._id}`);
+      this.socket.emit("newPost", `/post/${this.post._id}`);
     },
   },
 };
