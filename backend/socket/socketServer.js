@@ -1,5 +1,7 @@
 module.exports = (sio) => {
   sio.on("connection", (socket) => {
+    console.log(`Socket connected: ${socket.id}`);
+
     socket.on("joinRoom", (room) => {
       socket.join(room);
       console.log(`Socket joined room: ${room}`);

@@ -13,7 +13,9 @@ const login = (req, res) => {
 
 const isAuthenticated = (req, res) => {
   if (req.isAuthenticated() && req.user) {
-    return res.status(200).json({ isLoggedIn: true, user: req.user });
+    return res
+      .status(200)
+      .json({ isLoggedIn: true, user: userMapper(req.user) });
   }
   return res.status(200).json({ isLoggedIn: false });
 };
