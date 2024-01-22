@@ -6,8 +6,8 @@ export const useSocketStore = defineStore("socket", {
     socket: null,
   }),
   actions: {
-    setSocket(newSocket) {
-      this.socket = newSocket;
+    setSocket(socket) {
+      this.socket = socket;
     },
     initializeSocket() {
       const socket = io(

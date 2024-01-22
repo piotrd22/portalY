@@ -33,15 +33,15 @@ import { useSocketStore } from "./stores";
 const checkIsAuthenticated = async () => {
   try {
     const response = await authService.isAuthenticated();
-    const socketStore = useSocketStore();
 
     if (response.data.isLoggedIn && response.data.user) {
+      const socketStore = useSocketStore();
+
       localStorage.setItem(
         "isLoggedIn",
         JSON.stringify(response.data.isLoggedIn)
       );
       localStorage.setItem("user", JSON.stringify(response.data.user));
-
       socketStore.initializeSocket();
     } else {
       localStorage.removeItem("isLoggedIn");

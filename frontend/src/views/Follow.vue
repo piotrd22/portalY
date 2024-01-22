@@ -83,7 +83,6 @@ export default {
           this.id,
           this.lastCreatedAtFollowing
         );
-        console.log(response);
         if (response.data.followings.length === 0) {
           return done("empty");
         }
