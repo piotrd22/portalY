@@ -388,8 +388,6 @@ const getNewPostsOnFeed = async (req, res) => {
       }
     });
 
-    console.log(posts);
-
     return res.status(status.OK).json({ posts });
   } catch (err) {
     console.error(err.message);
