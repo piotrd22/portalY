@@ -35,6 +35,7 @@ export default {
           });
           this.$refs.createPostForm.reset();
           this.addPostFromParent(response.data.post);
+          this.addNewPostToFeedSocket();
           this.$toast.success("Post successfully added!");
         }
       } catch (err) {
@@ -54,6 +55,10 @@ export default {
   },
   props: {
     addPostFromParent: {
+      type: Function,
+      required: true,
+    },
+    addNewPostToFeedSocket: {
       type: Function,
       required: true,
     },

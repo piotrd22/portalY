@@ -1,6 +1,15 @@
 <template>
   <v-container class="custom-container">
-    <create-post-form :addPostFromParent="addPostFromParent"></create-post-form>
+    <create-post-form
+      :addPostFromParent="addPostFromParent"
+      :addNewPostToFeedSocket="addNewPostToFeedSocket"
+    ></create-post-form>
+
+    <v-btn v-if="newPostsLength > 0" @click="loadNewPosts">
+      Load more posts
+      <v-badge :content="newPostsLength" color="primary" inline></v-badge>
+    </v-btn>
+
     <v-infinite-scroll :onLoad="loadMore" :items="feed">
       <div v-for="post in feed" :key="post._id">
         <post
@@ -18,14 +27,29 @@
 import postService from "../services/postService";
 import Post from "../components/Post.vue";
 import CreatePostForm from "../components/CreatePostForm.vue";
+import { useSocketStore } from "../stores";
 
 export default {
   data() {
     return {
-      user: null,
       feed: [],
       lastCreatedAt: null,
+      room: "",
+      socket: useSocketStore().socket,
+      newPostsLength: 0,
+      firstCreatedAt: null,
     };
+  },
+  mounted() {
+    this.socket.on("newFeedPosts", () => {
+      this.newPostsLength++;
+    });
+  },
+  created() {
+    this.joinRoom();
+  },
+  beforeUnmount() {
+    this.leaveRoom();
   },
   methods: {
     async loadMore({ done }) {
@@ -36,6 +60,7 @@ export default {
         }
         this.feed.push(...response.data.posts);
         this.lastCreatedAt = this.feed[this.feed.length - 1].createdAt;
+        this.firstCreatedAt = this.feed[0].createdAt;
         done("ok");
       } catch (err) {
         done("error");
@@ -53,6 +78,33 @@ export default {
     },
     deletePostFromParent(id) {
       this.feed = this.feed.filter((post) => post._id !== id);
+    },
+    joinRoom() {
+      const user = JSON.parse(localStorage.getItem("user"));
+      const loggedInUserId = user._id;
+      this.room = loggedInUserId;
+      this.socket.emit("joinRoom", this.room);
+    },
+    leaveRoom() {
+      this.socket.emit("leaveRoom", this.room);
+      this.room = "";
+      this.newPostsLength = 0;
+    },
+    addNewPostToFeedSocket() {
+      this.socket.emit("newFeedPost");
+    },
+    async loadNewPosts() {
+      try {
+        const response = await postService.getNewPostsOnFeed(
+          this.firstCreatedAt
+        );
+        console.log(response);
+        this.feed.unshift(...response.data.posts);
+        this.firstCreatedAt = this.feed[0].createdAt;
+        this.newPostsLength = 0;
+      } catch (err) {
+        console.error("loadNewPosts() Feed.vue error: ", err);
+      }
     },
   },
   components: {

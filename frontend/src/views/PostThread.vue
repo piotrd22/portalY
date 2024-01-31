@@ -29,6 +29,11 @@
       :addPostToThreadSocket="addPostToThreadSocket"
     ></reply-post-form>
 
+    <v-btn v-if="newRepliesLength > 0" @click="loadNewReplies">
+      Load new replies
+      <v-badge :content="newRepliesLength" color="primary" inline></v-badge>
+    </v-btn>
+
     <v-infinite-scroll :onLoad="loadMoreReplies" :items="replies">
       <div v-for="reply in replies" :key="reply._id">
         <Post
@@ -61,15 +66,17 @@ export default {
       replies: [],
       post: null,
       lastCreatedAt: null,
+      firstCreatedAt: null,
       room: "",
-      timeoutId: null,
       socket: useSocketStore().socket,
+      newRepliesLength: 0,
     };
   },
   watch: {
     async $route() {
       this.leaveRoom();
       this.lastCreatedAt = null;
+      this.firstCreatedAt = null;
       this.replies = [];
       await this.fetchPost();
       if (window.scrollY === 0) {
@@ -82,21 +89,7 @@ export default {
   },
   mounted() {
     this.socket.on("newPosts", () => {
-      // timeoutId is useful when there are new posts,
-      // but we don't want to show messages every time there are new posts,
-      // so we wait X seconds to display such a toast
-      if (!this.timeoutId) {
-        this.timeoutId = setTimeout(() => {
-          this.$toast.clear();
-          this.$toast.info(
-            "New posts have been added to the thread you are in. Refresh the page.",
-            {
-              duration: 10000,
-            }
-          );
-          this.timeoutId = null;
-        }, 10000);
-      }
+      this.newRepliesLength++;
     });
   },
   created() {
@@ -124,6 +117,7 @@ export default {
         );
         this.replies = response.data.replies;
         this.lastCreatedAt = this.replies[this.replies.length - 1].createdAt;
+        this.firstCreatedAt = this.replies[0].createdAt;
       } catch (error) {
         console.error("Error fetching replies data:", error);
       }
@@ -140,6 +134,7 @@ export default {
 
         this.replies.push(...response.data.replies);
         this.lastCreatedAt = this.replies[this.replies.length - 1].createdAt;
+        this.firstCreatedAt = this.replies[0].createdAt;
         done("ok");
       } catch (error) {
         done("error");
@@ -190,11 +185,23 @@ export default {
     leaveRoom() {
       this.socket.emit("leaveRoom", this.room);
       this.room = "";
-      clearTimeout(this.timeoutId);
-      this.timeoutId = null;
+      this.newRepliesLength = 0;
     },
     addPostToThreadSocket() {
       this.socket.emit("newPost", this.room);
+    },
+    async loadNewReplies() {
+      try {
+        const response = await postService.getNewPostReplies(
+          this.id,
+          this.firstCreatedAt
+        );
+        this.replies.unshift(...response.data.replies);
+        this.firstCreatedAt = this.replies[0].createdAt;
+        this.newRepliesLength = 0;
+      } catch (error) {
+        console.error("Error fetching replies data:", error);
+      }
     },
   },
   components: {
