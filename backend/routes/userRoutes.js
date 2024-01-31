@@ -21,15 +21,15 @@ router.get(
 
 router.post("/", userValidators.createUserValidator, userController.createUser);
 
-router.delete(
-  "/:id",
-  [
-    authMiddleware.requireAuth,
-    commonMiddleware.validatePathIdIsValidMongoId,
-    userMiddleware.requireMe,
-  ],
-  userController.deleteUser
-);
+// router.delete(
+//   "/:id",
+//   [
+//     authMiddleware.requireAuth,
+//     commonMiddleware.validatePathIdIsValidMongoId,
+//     userMiddleware.requireMe,
+//   ],
+//   userController.deleteUser
+// );
 
 router.patch(
   "/:id",

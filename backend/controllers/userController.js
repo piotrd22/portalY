@@ -10,13 +10,13 @@ const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const user = await userService.getUserById(id);
+    const user = await userService.getUserByIdWithValidFollowing(id);
 
     if (!user) {
       return res.status(status.NOT_FOUND).json({ message: "User not found" });
     }
 
-    return res.status(status.OK).json({ user: userMapper(user) });
+    return res.status(status.OK).json({ user });
   } catch (err) {
     console.error(err.message);
     return res
@@ -40,30 +40,30 @@ const createUser = async (req, res) => {
   }
 };
 
-const deleteUser = async (req, res) => {
-  try {
-    const { id } = req.params;
+// const deleteUser = async (req, res) => {
+//   try {
+//     const { id } = req.params;
 
-    const existingUser = await userService.getUserById(id);
+//     const existingUser = await userService.getUserById(id);
 
-    if (!existingUser) {
-      return res.status(status.NOT_FOUND).json({ message: "User not found" });
-    }
+//     if (!existingUser) {
+//       return res.status(status.NOT_FOUND).json({ message: "User not found" });
+//     }
 
-    if (existingUser.avatar && existingUser.avatarId) {
-      imagekit.deleteFile(existingUser.avatarId);
-    }
+//     if (existingUser.avatar && existingUser.avatarId) {
+//       imagekit.deleteFile(existingUser.avatarId);
+//     }
 
-    await userService.deleteUser(id);
+//     await userService.deleteUser(id);
 
-    return res.status(status.OK).json({ message: "Sucessfully deleted" });
-  } catch (err) {
-    console.error(err.message);
-    return res
-      .status(status.INTERNAL_SERVER_ERROR)
-      .json({ message: "Internal Server Error" });
-  }
-};
+//     return res.status(status.OK).json({ message: "Sucessfully deleted" });
+//   } catch (err) {
+//     console.error(err.message);
+//     return res
+//       .status(status.INTERNAL_SERVER_ERROR)
+//       .json({ message: "Internal Server Error" });
+//   }
+// };
 
 const followUser = async (req, res) => {
   try {
@@ -81,7 +81,12 @@ const followUser = async (req, res) => {
       return res.status(status.NOT_FOUND).json({ message: "User not found" });
     }
 
-    if (req.user.following.some((user) => user._id.equals(userToFollow._id))) {
+    if (
+      req.user.following.some(
+        (user) =>
+          user?.user?._id.equals(userToFollow._id) && !user?.unfollowedAt
+      )
+    ) {
       return res
         .status(status.CONFLICT)
         .json({ message: "You already followed this user" });
@@ -115,7 +120,10 @@ const unfollowUser = async (req, res) => {
     }
 
     if (
-      !req.user.following.some((user) => user._id.equals(userToUnfollow._id))
+      !req.user.following.some(
+        (user) =>
+          user?.user?._id.equals(userToUnfollow._id) && !user?.unfollowedAt
+      )
     ) {
       return res
         .status(status.CONFLICT)
@@ -263,18 +271,11 @@ const getUserFollowings = async (req, res) => {
     const { lastCreatedAt = new Date().toISOString(), pageSize = 10 } =
       req.query;
 
-    const user = await userService.getUserAndPopulate(
+    const followings = await userService.getUserFollowings(
       id,
-      "following",
       lastCreatedAt,
       pageSize
     );
-
-    if (!user) {
-      return res.status(status.NOT_FOUND).json({ message: "User not found" });
-    }
-
-    const followings = user.following.map((following) => userMapper(following));
 
     return res.status(status.OK).json({ followings });
   } catch (err) {
@@ -611,7 +612,7 @@ const deleteAvatar = async (req, res) => {
 module.exports = {
   getUserById,
   createUser,
-  deleteUser,
+  // deleteUser,
   followUser,
   unfollowUser,
   blockUser,

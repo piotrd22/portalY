@@ -16,6 +16,12 @@ module.exports = (sio) => {
       socket.to(room).emit("newPosts"); // To everyone in the room except this user
     });
 
+    socket.on("newFeedPost", () => {
+      socket.request.user.followers.forEach((follower) => {
+        socket.to(follower.toString()).emit("newFeedPosts");
+      });
+    });
+
     socket.on("disconnect", () => {
       console.log(`Socket disconnected: ${socket.id}`);
     });

@@ -122,6 +122,30 @@ const getPostReplies = async (req, res) => {
   }
 };
 
+const getNewPostReplies = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { firstCreatedAt = new Date(0).toISOString } = req.query;
+
+    const post = await postService.getNewPostReplies(
+      id,
+      req.user,
+      firstCreatedAt
+    );
+
+    if (!post) {
+      return res.status(status.NOT_FOUND).json({ message: "Post not found" });
+    }
+
+    return res.status(status.OK).json({ replies: post.replies });
+  } catch (err) {
+    console.error(err.message);
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ message: "Internal Server Error" });
+  }
+};
+
 const getPostQuotedBy = async (req, res) => {
   try {
     const { id } = req.params;
@@ -340,14 +364,51 @@ const getFeed = async (req, res) => {
   }
 };
 
+const getNewPostsOnFeed = async (req, res) => {
+  try {
+    const { firstCreatedAt = new Date().toISOString() } = req.query;
+
+    const posts = await postService.getNewPostsOnFeed(req.user, firstCreatedAt);
+
+    posts.forEach((post) => {
+      if (post.quotedPost && post.quotedPost.isDeleted) {
+        post.quotedPost.content = "[deleted]";
+      } else if (
+        post.quotedPost &&
+        (req.user.blockedUsers.some((user) =>
+          user._id.equals(new mongoose.Types.ObjectId(post.quotedPost.user.id))
+        ) ||
+          req.user.blockedBy.some((user) =>
+            user._id.equals(
+              new mongoose.Types.ObjectId(post.quotedPost.user.id)
+            )
+          ))
+      ) {
+        post.quotedPost.content = "[hidden]";
+      }
+    });
+
+    console.log(posts);
+
+    return res.status(status.OK).json({ posts });
+  } catch (err) {
+    console.error(err.message);
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ message: "Internal Server Error" });
+  }
+};
+
 module.exports = {
   getPostById,
   getPostReplies,
+  getNewPostReplies,
   createPost,
   createReply,
   createQuote,
   deletePost,
   updatePost,
   getFeed,
+  getNewPostsOnFeed,
   getPostQuotedBy,
 };

@@ -1,9 +1,46 @@
 const bcrypt = require("bcrypt");
+const mongoose = require("mongoose");
 const User = require("../models/User");
-const Post = require("../models/Post");
+// const Post = require("../models/Post");
 
 const getUserById = async (id) => {
   return await User.findById(id);
+};
+
+const getUserByIdWithValidFollowing = async (id) => {
+  const users = await User.aggregate([
+    { $match: { _id: new mongoose.Types.ObjectId(id) } },
+    {
+      $project: {
+        username: 1,
+        avatar: 1,
+        avatarId: 1,
+        bio: 1,
+        website: 1,
+        role: 1,
+        followers: 1,
+        blockedUsers: 1,
+        blockedBy: 1,
+        posts: 1,
+        replies: 1,
+        birthDate: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        name: 1,
+        following: {
+          $filter: {
+            input: "$following",
+            as: "follow",
+            cond: {
+              $eq: ["$$follow.unfollowedAt", null],
+            },
+          },
+        },
+      },
+    },
+  ]);
+
+  return users[0];
 };
 
 const createUser = async (username, password) => {
@@ -15,62 +52,69 @@ const createUser = async (username, password) => {
   return await newUser.save();
 };
 
-const deleteUser = async (id) => {
-  await User.findByIdAndDelete(id);
-  await User.updateMany(
-    {
-      $or: [
-        { followers: id },
-        { following: id },
-        { blockedBy: id },
-        { blockedUsers: id },
-      ],
-    },
-    {
-      $pull: {
-        followers: id,
-        following: id,
-        blockedBy: id,
-        blockedUsers: id,
-      },
-    }
-  );
+// const deleteUser = async (id) => {
+//   await User.findByIdAndDelete(id);
+//   await User.updateMany(
+//     {
+//       $or: [
+//         { followers: id },
+//         { following: id },
+//         { blockedBy: id },
+//         { blockedUsers: id },
+//       ],
+//     },
+//     {
+//       $pull: {
+//         followers: id,
+//         following: id,
+//         blockedBy: id,
+//         blockedUsers: id,
+//       },
+//     }
+//   );
 
-  const userPosts = await Post.find({ user: id });
+//   const userPosts = await Post.find({ user: id });
 
-  // I know it sucks but I don't have much time so maybe I'll change it in future
-  for (const post of userPosts) {
-    await Post.updateMany(
-      { $or: [{ replies: post._id }, { quotedBy: post._id }] },
-      { $pull: { replies: post._id, quotedBy: post._id } }
-    );
-  }
+//   // I know it sucks but I don't have much time so maybe I'll change it in future
+//   for (const post of userPosts) {
+//     await Post.updateMany(
+//       { $or: [{ replies: post._id }, { quotedBy: post._id }] },
+//       { $pull: { replies: post._id, quotedBy: post._id } }
+//     );
+//   }
 
-  await Post.updateMany(
-    { user: id },
-    { $set: { isDeleted: true, user: null } }
-  );
-};
+//   await Post.updateMany(
+//     { user: id },
+//     { $set: { isDeleted: true, user: null } }
+//   );
+// };
 
 const followUser = async (user, userToFollow) => {
   await userToFollow.updateOne({ $push: { followers: user.id } });
-  await user.updateOne({ $push: { following: userToFollow.id } });
+  await user.updateOne({ $push: { following: { user: userToFollow.id } } });
 };
 
 const unfollowUser = async (user, userToUnfollow) => {
-  await user.updateOne({ $pull: { following: userToUnfollow.id } });
+  const currentDate = new Date();
+  await user.updateOne(
+    { $set: { "following.$[m].unfollowedAt": currentDate } },
+    { arrayFilters: [{ "m.unfollowedAt": null, "m.user": userToUnfollow.id }] }
+  );
+
   await userToUnfollow.updateOne({ $pull: { followers: user.id } });
 };
 
 const blockUser = async (user, userToBlock) => {
-  if (user.following.some((u) => u._id.equals(userToBlock._id))) {
-    await user.updateOne({ $pull: { following: userToBlock.id } });
-    await userToBlock.updateOne({ $pull: { followers: user.id } });
+  if (
+    user.following.some(
+      (u) => u.user._id.equals(userToBlock._id) && !u.unfollowedAt
+    )
+  ) {
+    unfollowUser(user, userToBlock);
   }
 
   if (user.followers.some((u) => u._id.equals(userToBlock._id))) {
-    await user.updateOne({ $pull: { followers: userToBlock.id } });
-    await userToBlock.updateOne({ $pull: { following: user.id } });
+    unfollowUser(userToBlock, user);
   }
 
   await userToBlock.updateOne({ $push: { blockedBy: user.id } });
@@ -113,6 +157,41 @@ const getUserAndPopulate = async (id, path, lastCreatedAt, pageSize = 10) => {
       limit: parseInt(pageSize),
     },
   });
+};
+
+const getUserFollowings = async (id, lastCreatedAt, pageSize = 10) => {
+  const users = await User.aggregate([
+    { $match: { _id: new mongoose.Types.ObjectId(id) } },
+    {
+      $project: {
+        _id: 1,
+        following: {
+          $map: {
+            input: {
+              $filter: {
+                input: "$following",
+                as: "follow",
+                cond: {
+                  $eq: ["$$follow.unfollowedAt", null],
+                },
+              },
+            },
+            as: "follow",
+            in: "$$follow.user",
+          },
+        },
+      },
+    },
+  ]);
+
+  const user = users[0];
+
+  return await User.find({
+    _id: { $in: user.following },
+    createdAt: { $lt: new Date(lastCreatedAt) },
+  })
+    .sort({ createdAt: -1 })
+    .limit(parseInt(pageSize));
 };
 
 const updateUser = async (id, dataToUpdate) => {
@@ -186,14 +265,16 @@ const getUserReplies = async (id, lastCreatedAt, pageSize = 10) => {
 
 module.exports = {
   getUserById,
+  getUserByIdWithValidFollowing,
   createUser,
-  deleteUser,
+  // deleteUser,
   followUser,
   unfollowUser,
   blockUser,
   unblockUser,
   searchUsers,
   getUserAndPopulate,
+  getUserFollowings,
   updateUser,
   getUserPosts,
   getUserReplies,

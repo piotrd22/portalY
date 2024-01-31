@@ -1,5 +1,24 @@
 const { Schema, model, default: mongoose } = require("mongoose");
 
+const followingSchema = new Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    followedAt: {
+      type: Date,
+      default: Date.now,
+    },
+    unfollowedAt: {
+      type: Date,
+      default: null,
+    },
+  },
+  { _id: false }
+);
+
 const userSchema = new Schema(
   {
     username: {
@@ -48,12 +67,7 @@ const userSchema = new Schema(
         ref: "User",
       },
     ],
-    following: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
+    following: [followingSchema],
     blockedUsers: [
       {
         type: mongoose.Schema.Types.ObjectId,
