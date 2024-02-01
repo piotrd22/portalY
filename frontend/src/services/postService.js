@@ -44,7 +44,7 @@ export default {
   },
   getNewPostReplies(id, firstCreatedAt) {
     const uri = `/post/${id}/replies/new?firstCreatedAt=${
-      firstCreatedAt || new Date().toISOString()
+      firstCreatedAt || new Date(0).toISOString()
     }`;
     return apiClient.get(uri, { withCredentials: true });
   },
@@ -56,7 +56,7 @@ export default {
   },
   getNewPostsOnFeed(firstCreatedAt) {
     const uri = `post/feed/new?firstCreatedAt=${
-      firstCreatedAt || new Date().toISOString()
+      firstCreatedAt || new Date(0).toISOString()
     }`;
     return apiClient.get(uri, { withCredentials: true });
   },

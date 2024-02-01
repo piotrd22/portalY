@@ -29,7 +29,11 @@
       :addPostToThreadSocket="addPostToThreadSocket"
     ></reply-post-form>
 
-    <v-btn v-if="newRepliesLength > 0" @click="loadNewReplies">
+    <v-btn
+      class="load-button"
+      v-if="newRepliesLength > 0"
+      @click="loadNewReplies"
+    >
       Load new replies
       <v-badge :content="newRepliesLength" color="primary" inline></v-badge>
     </v-btn>
@@ -116,8 +120,8 @@ export default {
           this.lastCreatedAt
         );
         this.replies = response.data.replies;
-        this.lastCreatedAt = this.replies[this.replies.length - 1].createdAt;
-        this.firstCreatedAt = this.replies[0].createdAt;
+        this.lastCreatedAt = this.replies[this.replies.length - 1]?.createdAt;
+        this.firstCreatedAt = this.replies[0]?.createdAt;
       } catch (error) {
         console.error("Error fetching replies data:", error);
       }
@@ -133,8 +137,8 @@ export default {
         }
 
         this.replies.push(...response.data.replies);
-        this.lastCreatedAt = this.replies[this.replies.length - 1].createdAt;
-        this.firstCreatedAt = this.replies[0].createdAt;
+        this.lastCreatedAt = this.replies[this.replies.length - 1]?.createdAt;
+        this.firstCreatedAt = this.replies[0]?.createdAt;
         done("ok");
       } catch (error) {
         done("error");
@@ -197,7 +201,7 @@ export default {
           this.firstCreatedAt
         );
         this.replies.unshift(...response.data.replies);
-        this.firstCreatedAt = this.replies[0].createdAt;
+        this.firstCreatedAt = this.replies[0]?.createdAt;
         this.newRepliesLength = 0;
       } catch (error) {
         console.error("Error fetching replies data:", error);
@@ -214,5 +218,9 @@ export default {
 <style scoped>
 .custom-container {
   max-width: 60%;
+}
+
+.load-button {
+  margin-top: 10px;
 }
 </style>

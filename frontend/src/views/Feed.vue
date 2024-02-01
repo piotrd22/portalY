@@ -5,7 +5,7 @@
       :addNewPostToFeedSocket="addNewPostToFeedSocket"
     ></create-post-form>
 
-    <v-btn v-if="newPostsLength > 0" @click="loadNewPosts">
+    <v-btn class="load-button" v-if="newPostsLength > 0" @click="loadNewPosts">
       Load more posts
       <v-badge :content="newPostsLength" color="primary" inline></v-badge>
     </v-btn>
@@ -59,8 +59,8 @@ export default {
           return done("empty");
         }
         this.feed.push(...response.data.posts);
-        this.lastCreatedAt = this.feed[this.feed.length - 1].createdAt;
-        this.firstCreatedAt = this.feed[0].createdAt;
+        this.lastCreatedAt = this.feed[this.feed.length - 1]?.createdAt;
+        this.firstCreatedAt = this.feed[0]?.createdAt;
         done("ok");
       } catch (err) {
         done("error");
@@ -117,5 +117,9 @@ export default {
 <style scoped>
 .custom-container {
   max-width: 60%;
+}
+
+.load-button {
+  margin-top: 10px;
 }
 </style>
