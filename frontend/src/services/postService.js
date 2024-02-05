@@ -42,22 +42,10 @@ export default {
     }&pageSize=${pageSize}`;
     return apiClient.get(uri, { withCredentials: true });
   },
-  getNewPostReplies(id, firstCreatedAt) {
-    const uri = `/post/${id}/replies/new?firstCreatedAt=${
-      firstCreatedAt || new Date(0).toISOString()
-    }`;
-    return apiClient.get(uri, { withCredentials: true });
-  },
   getPostQuotedBy(id, lastCreatedAt, pageSize = 10) {
     const uri = `/post/${id}/quoted?lastCreatedAt=${
       lastCreatedAt || new Date().toISOString()
     }&pageSize=${pageSize}`;
-    return apiClient.get(uri, { withCredentials: true });
-  },
-  getNewPostsOnFeed(firstCreatedAt) {
-    const uri = `post/feed/new?firstCreatedAt=${
-      firstCreatedAt || new Date(0).toISOString()
-    }`;
     return apiClient.get(uri, { withCredentials: true });
   },
 };

@@ -54,27 +54,6 @@ const getPostReplies = async (
   });
 };
 
-const getNewPostReplies = async (id, currentUser, firstCreatedAt) => {
-  return await Post.findById(id).populate({
-    path: "replies",
-    match: {
-      isDeleted: { $ne: true },
-      user: {
-        $nin: [
-          ...currentUser.blockedUsers,
-          ...currentUser.blockedBy,
-          currentUser._id,
-        ],
-      },
-      createdAt: { $gt: new Date(firstCreatedAt) },
-    },
-    populate: { path: "user", select: "avatar username _id" },
-    options: {
-      sort: { createdAt: -1 },
-    },
-  });
-};
-
 const getPostQuotedBy = async (
   id,
   currentUser,
@@ -201,53 +180,15 @@ const getFeed = async (currentUser, lastCreatedAt, pageSize = 10) => {
     .limit(parseInt(pageSize));
 };
 
-const getNewPostsOnFeed = async (currentUser, firstCreatedAt) => {
-  const query = {
-    $or: [
-      ...currentUser.following.map((following) => ({
-        user: following.user,
-        $and: [
-          { createdAt: { $gte: following.followedAt } },
-          { createdAt: { $lte: following.unfollowedAt || new Date() } },
-        ],
-      })),
-    ],
-    isDeleted: { $ne: true },
-    user: {
-      $nin: [
-        ...currentUser.blockedUsers,
-        ...currentUser.blockedBy,
-        currentUser._id,
-      ],
-    },
-    parents: { $size: 0 },
-    createdAt: { $gt: new Date(firstCreatedAt) },
-  };
-
-  return await Post.find(query)
-    .populate({
-      path: "user",
-      select: "avatar username _id",
-    })
-    .populate({
-      path: "quotedPost",
-      select: "content user _id createdAt updatedAt isDeleted",
-      populate: { path: "user", select: "avatar username _id" },
-    })
-    .sort({ createdAt: -1 });
-};
-
 module.exports = {
   getPostByIdAndPopulate,
   getPostById,
   getPostReplies,
-  getNewPostReplies,
   createPost,
   createReply,
   createQuote,
   deletePost,
   updatePost,
   getFeed,
-  getNewPostsOnFeed,
   getPostQuotedBy,
 };
