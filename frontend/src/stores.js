@@ -10,12 +10,9 @@ export const useSocketStore = defineStore("socket", {
       this.socket = socket;
     },
     initializeSocket() {
-      const socket = io(
-        import.meta.env.VITE_WS_URL || "https://localhost:8080",
-        {
-          transports: ["websocket"],
-        }
-      );
+      const socket = io("wss://" + window.location.hostname + ":8080", {
+        transports: ["websocket"],
+      });
       this.setSocket(socket);
     },
     disconnectSocket() {
