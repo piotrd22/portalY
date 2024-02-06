@@ -17,6 +17,7 @@
           :updatePostFromParent="updatePostFromParent"
           :deletePostFromParent="deletePostFromParent"
           :addPostFromParent="addPostFromParent"
+          :addNewPostToFeedSocket="addNewPostToFeedSocket"
         ></post>
       </div>
     </v-infinite-scroll>
@@ -37,7 +38,6 @@ export default {
       room: "",
       socket: useSocketStore().socket,
       newPostsLength: 0,
-      firstCreatedAt: null,
     };
   },
   mounted() {
@@ -60,7 +60,6 @@ export default {
         }
         this.feed.push(...response.data.posts);
         this.lastCreatedAt = this.feed[this.feed.length - 1]?.createdAt;
-        this.firstCreatedAt = this.feed[0]?.createdAt;
         done("ok");
       } catch (err) {
         done("error");
@@ -95,12 +94,11 @@ export default {
     },
     async loadNewPosts() {
       try {
-        const response = await postService.getNewPostsOnFeed(
-          this.firstCreatedAt
-        );
-        console.log(response);
-        this.feed.unshift(...response.data.posts);
-        this.firstCreatedAt = this.feed[0].createdAt;
+        this.feed = [];
+        this.lastCreatedAt = null;
+        const response = await postService.getFeed(this.lastCreatedAt);
+        this.feed = response.data.posts;
+        this.lastCreatedAt = this.feed[this.feed.length - 1]?.createdAt;
         this.newPostsLength = 0;
       } catch (err) {
         console.error("loadNewPosts() Feed.vue error: ", err);

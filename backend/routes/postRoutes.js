@@ -8,12 +8,6 @@ const postValidators = require("../validators/post/postValidators");
 router.get("/feed", authMiddleware.requireAuth, postController.getFeed);
 
 router.get(
-  "/feed/new",
-  authMiddleware.requireAuth,
-  postController.getNewPostsOnFeed
-);
-
-router.get(
   "/:id",
   [authMiddleware.requireAuth, commonMiddleware.validatePathIdIsValidMongoId],
   postController.getPostById
@@ -53,12 +47,6 @@ router.get(
   "/:id/replies",
   [authMiddleware.requireAuth, commonMiddleware.validatePathIdIsValidMongoId],
   postController.getPostReplies
-);
-
-router.get(
-  "/:id/replies/new",
-  [authMiddleware.requireAuth, commonMiddleware.validatePathIdIsValidMongoId],
-  postController.getNewPostReplies
 );
 
 router.get(

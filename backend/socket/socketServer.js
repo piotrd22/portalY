@@ -1,3 +1,5 @@
+const userService = require("../services/userService");
+
 module.exports = (sio) => {
   sio.on("connection", (socket) => {
     console.log(`Socket connected: ${socket.id}`);
@@ -16,8 +18,9 @@ module.exports = (sio) => {
       socket.to(room).emit("newPosts"); // To everyone in the room except this user
     });
 
-    socket.on("newFeedPost", () => {
-      socket.request.user.followers.forEach((follower) => {
+    socket.on("newFeedPost", async () => {
+      const user = await userService.getUserById(socket.request.user._id);
+      user.followers.forEach((follower) => {
         socket.to(follower.toString()).emit("newFeedPosts");
       });
     });

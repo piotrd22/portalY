@@ -70,7 +70,6 @@ export default {
       replies: [],
       post: null,
       lastCreatedAt: null,
-      firstCreatedAt: null,
       room: "",
       socket: useSocketStore().socket,
       newRepliesLength: 0,
@@ -80,7 +79,6 @@ export default {
     async $route() {
       this.leaveRoom();
       this.lastCreatedAt = null;
-      this.firstCreatedAt = null;
       this.replies = [];
       await this.fetchPost();
       if (window.scrollY === 0) {
@@ -121,7 +119,6 @@ export default {
         );
         this.replies = response.data.replies;
         this.lastCreatedAt = this.replies[this.replies.length - 1]?.createdAt;
-        this.firstCreatedAt = this.replies[0]?.createdAt;
       } catch (error) {
         console.error("Error fetching replies data:", error);
       }
@@ -138,7 +135,6 @@ export default {
 
         this.replies.push(...response.data.replies);
         this.lastCreatedAt = this.replies[this.replies.length - 1]?.createdAt;
-        this.firstCreatedAt = this.replies[0]?.createdAt;
         done("ok");
       } catch (error) {
         done("error");
@@ -196,13 +192,15 @@ export default {
     },
     async loadNewReplies() {
       try {
-        const response = await postService.getNewPostReplies(
+        this.replies = [];
+        this.lastCreatedAt = null;
+        const response = await postService.getPostReplies(
           this.id,
-          this.firstCreatedAt
+          this.lastCreatedAt
         );
-        this.replies.unshift(...response.data.replies);
-        this.firstCreatedAt = this.replies[0]?.createdAt;
+        this.replies = response.data.replies;
         this.newRepliesLength = 0;
+        this.lastCreatedAt = this.replies[this.replies.length - 1]?.createdAt;
       } catch (error) {
         console.error("Error fetching replies data:", error);
       }

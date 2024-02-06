@@ -270,6 +270,7 @@ export default {
       default: false,
     },
     replyToPostFromParent: Function,
+    addNewPostToFeedSocket: Function,
   },
   computed: {
     getPostClasses() {
@@ -368,6 +369,7 @@ export default {
             this.quotePostContent,
             this.post._id
           );
+          this.addNewPostToFeedSocket();
           this.closeQuotePostDialog();
           this.$toast.success("Post successfully quoted!");
           this.quotedLength++;
